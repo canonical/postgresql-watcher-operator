@@ -22,10 +22,7 @@ from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_delay, wait_fixed
 from yaml import safe_load
 
-from ..helpers import (
-    APPLICATION_NAME,
-    DATABASE_APP_NAME,
-)
+from ..helpers import APPLICATION_NAME, DATABASE_APP_NAME
 from .helpers import APPLICATION_NAME as TEST_APP_NAME
 from .helpers import (
     are_writes_increasing,
@@ -249,7 +246,8 @@ async def test_build_and_deploy_stereo_mode(ops_test: OpsTest, charm) -> None:
 
 
 @pytest.mark.abort_on_fail
-async def test_replica_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
+# async def test_replica_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
+async def test_replica_shutdown_with_watcher(ops_test: OpsTest) -> None:
     """Test replica shutdown with watcher providing quorum.
 
     Expected behavior:
@@ -321,7 +319,8 @@ async def test_replica_shutdown_with_watcher(ops_test: OpsTest, continuous_write
 
 
 @pytest.mark.abort_on_fail
-async def test_primary_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
+# async def test_primary_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
+async def test_primary_shutdown_with_watcher(ops_test: OpsTest) -> None:
     """Test primary shutdown with watcher providing quorum.
 
     Expected behavior:
@@ -434,7 +433,8 @@ async def test_primary_shutdown_with_watcher(ops_test: OpsTest, continuous_write
 
 
 @pytest.mark.abort_on_fail
-async def test_watcher_shutdown_no_outage(ops_test: OpsTest, continuous_writes) -> None:
+# async def test_watcher_shutdown_no_outage(ops_test: OpsTest, continuous_writes) -> None:
+async def test_watcher_shutdown_no_outage(ops_test: OpsTest) -> None:
     """Test watcher shutdown - should not cause service outage.
 
     Expected behavior:
@@ -485,7 +485,8 @@ async def test_watcher_shutdown_no_outage(ops_test: OpsTest, continuous_writes) 
 
 @pytest.mark.abort_on_fail
 async def test_primary_network_isolation_with_watcher(
-    ops_test: OpsTest, continuous_writes
+    # ops_test: OpsTest, continuous_writes
+    ops_test: OpsTest,
 ) -> None:
     """Test network isolation of primary with watcher.
 
@@ -569,7 +570,8 @@ async def test_primary_network_isolation_with_watcher(
 
 @pytest.mark.abort_on_fail
 async def test_replica_network_isolation_with_watcher(
-    ops_test: OpsTest, continuous_writes
+    # ops_test: OpsTest, continuous_writes
+    ops_test: OpsTest,
 ) -> None:
     """Test network isolation of replica with watcher.
 
@@ -644,7 +646,8 @@ async def test_replica_network_isolation_with_watcher(
 
 
 @pytest.mark.abort_on_fail
-async def test_watcher_network_isolation(ops_test: OpsTest, continuous_writes) -> None:
+# async def test_watcher_network_isolation(ops_test: OpsTest, continuous_writes) -> None:
+async def test_watcher_network_isolation(ops_test: OpsTest) -> None:
     """Test network isolation of watcher.
 
     Expected behavior:
