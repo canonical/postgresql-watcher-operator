@@ -1,5 +1,5 @@
 #!/usr/bin/env -S LD_LIBRARY_PATH=lib python3
-# Copyright 2021 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Charmed Machine Operator for the PostgreSQL database."""
@@ -23,17 +23,9 @@ from ops import (
     SecretRemoveEvent,
     main,
 )
-from single_kernel_postgresql.config.literals import (
-    PEER,
-    SYSTEM_USERS,
-)
+from single_kernel_postgresql.config.literals import PEER
 
 from config import CharmConfig
-from constants import (
-    APP_SCOPE,
-    SECRET_KEY_OVERRIDES,
-    UNIT_SCOPE,
-)
 from raft_controller import install_service
 from relations.watcher_requirer import WatcherRequirerHandler
 
@@ -44,21 +36,12 @@ logging.getLogger("asyncio").setLevel(logging.WARNING)
 logging.getLogger("boto3").setLevel(logging.WARNING)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 
-PRIMARY_NOT_REACHABLE_MESSAGE = "waiting for primary to be reachable from this unit"
-EXTENSIONS_DEPENDENCY_MESSAGE = "Unsatisfied plugin dependencies. Please check the logs"
-EXTENSION_OBJECT_MESSAGE = "Cannot disable plugins: Existing objects depend on it. See logs"
-
 SCOPES = Literal["app", "unit"]
-PASSWORD_USERS = [*SYSTEM_USERS, "patroni"]
-
-
-class CannotConnectError(Exception):
-    """Cannot run smoke check on connected Database."""
 
 
 @dataclasses.dataclass(eq=False)
 class _PostgreSQLRefresh(charm_refresh.CharmSpecificMachines):
-    _charm: "PostgresqlOperatorCharm"
+    _charm: "PostgresqlWatcherCharm"
 
     @staticmethod
     def run_pre_refresh_checks_after_1_unit_refreshed() -> None:
@@ -101,7 +84,7 @@ class _PostgreSQLRefresh(charm_refresh.CharmSpecificMachines):
         pass
 
 
-class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
+class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
     """Charmed Operator for the PostgreSQL database."""
 
     config_type = CharmConfig
@@ -216,22 +199,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # RelationData has dict like API
         return self._peers.data  # type: ignore
 
-    def _peer_data(self, scope: SCOPES) -> dict[str, str]:
-        """Return corresponding databag for app/unit."""
-        return self.all_peer_data[self._scope_obj(scope)]
-
-    def _scope_obj(self, scope: SCOPES):
-        if scope == APP_SCOPE:
-            return self.app
-        if scope == UNIT_SCOPE:
-            return self.unit
-
-    def _translate_field_to_secret_key(self, key: str) -> str:
-        """Change 'key' to secrets-compatible key field."""
-        key = SECRET_KEY_OVERRIDES.get(key, key)
-        new_key = key.replace("_", "-")
-        return new_key.strip("-")
-
     def _on_secret_remove(self, event: SecretRemoveEvent) -> None:
         if self.model.juju_version < JujuVersion("3.6.11"):
             logger.warning(
@@ -303,4 +270,4 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
 
 if __name__ == "__main__":
-    main(PostgresqlOperatorCharm)
+    main(PostgresqlWatcherCharm)

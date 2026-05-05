@@ -1,12 +1,10 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """A collection of utility functions that are used in the charm."""
 
 import os
 import pwd
-import secrets
-import string
 from asyncio import as_completed, create_task, run, wait
 from contextlib import suppress
 from ssl import CERT_NONE, create_default_context
@@ -15,29 +13,6 @@ from typing import Any
 from httpx import AsyncClient, BasicAuth, HTTPError
 
 from constants import API_REQUEST_TIMEOUT
-
-
-def new_password() -> str:
-    """Generate a random password string.
-
-    Returns:
-       A random password string.
-    """
-    choices = string.ascii_letters + string.digits
-    password = "".join([secrets.choice(choices) for i in range(16)])
-    return password
-
-
-def label2name(label: str) -> str:
-    """Convert a unit label (with `-`) to a unit name (with `/`).
-
-    Args:
-        label: The label to convert.
-
-    Returns:
-        The converted name.
-    """
-    return label.rsplit("-", 1)[0] + "/" + label.rsplit("-", 1)[1]
 
 
 def render_file(path: str, content: str, mode: int, change_owner: bool = True) -> None:

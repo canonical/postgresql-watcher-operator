@@ -42,7 +42,7 @@ from constants import PATRONI_CLUSTER_STATUS_ENDPOINT, RAFT_PARTNER_PREFIX, RAFT
 from utils import create_directory, parallel_patroni_get_request, render_file
 
 if TYPE_CHECKING:
-    from charm import PostgresqlOperatorCharm
+    from charm import PostgresqlWatcherCharm
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class RaftController:
     3. The systemd service ensures the Raft node stays running
     """
 
-    def __init__(self, charm: "PostgresqlOperatorCharm", instance_id: str = "default"):
+    def __init__(self, charm: "PostgresqlWatcherCharm", instance_id: str = "default"):
         """Initialize the Raft controller.
 
         Args:

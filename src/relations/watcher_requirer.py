@@ -43,7 +43,7 @@ from constants import RAFT_PORT, WATCHER_RELATION
 from raft_controller import RaftController, install_service
 
 if typing.TYPE_CHECKING:
-    from charm import PostgresqlOperatorCharm
+    from charm import PostgresqlWatcherCharm
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ SNAP_CHANNEL = "16/edge"
 class WatcherRequirerHandler(Object):
     """Handles the watcher requirer relation and watcher-mode lifecycle."""
 
-    def __init__(self, charm: "PostgresqlOperatorCharm"):
+    def __init__(self, charm: "PostgresqlWatcherCharm"):
         super().__init__(charm, WATCHER_RELATION)
         self.charm = charm
 
