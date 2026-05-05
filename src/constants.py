@@ -5,6 +5,7 @@
 
 API_REQUEST_TIMEOUT = 5
 PATRONI_CLUSTER_STATUS_ENDPOINT = "cluster"
+PEER = "database-peers"
 
 # # Watcher constants
 WATCHER_RELATION = "watcher"
