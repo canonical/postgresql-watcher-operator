@@ -1,14 +1,18 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# TEMPLATE-TODO: change this example to suit your needs.
-# If you don't need a config, you can remove the file entirely.
-# It ties in to the example _on_config_changed handler in src/charm.py
-#
-# Learn more about config at: https://juju.is/docs/sdk/config
 
 options:
-  thing:
-    default: 🎁
-    description: A thing used by the charm.
+  pause-after-unit-refresh:
+    description: |
+      Wait for manual confirmation to resume refresh after these units refresh
+      Allowed values: "all", "first", "none"
     type: string
+    default: first
+  profile:
+    description: |
+      Profile representing the scope of deployment, and used to tune resource allocation.
+      Allowed values are: “production” and “testing”.
+      Production will tune postgresql for maximum performance while testing will tune for
+      minimal running performance.
+    type: string
+    default: "production"

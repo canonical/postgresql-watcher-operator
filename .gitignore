@@ -5,5 +5,19 @@ build/
 .coverage
 __pycache__/
 *.py[cod]
-.idea
-.vscode
+coverage.xml
+/requirements.txt
+requirements-last-build.txt
+.last_refresh_unit_status.json
+
+# PyCharm project folder.
+.idea/
+
+# LXD profile used for deployment on local development environment.
+lxd-profile.yaml
+
+# Terraform runtime
+terraform/.terraform.lock.hcl
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
