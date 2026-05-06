@@ -1,0 +1,18 @@
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+options:
+  pause-after-unit-refresh:
+    description: |
+      Wait for manual confirmation to resume refresh after these units refresh
+      Allowed values: "all", "first", "none"
+    type: string
+    default: first
+  profile:
+    description: |
+      Profile representing the scope of deployment, and used to tune resource allocation.
+      Allowed values are: “production” and “testing”.
+      Production will tune postgresql for maximum performance while testing will tune for
+      minimal running performance.
+    type: string
+    default: "production"
