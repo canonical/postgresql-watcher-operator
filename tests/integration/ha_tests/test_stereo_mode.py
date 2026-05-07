@@ -35,6 +35,8 @@ from .helpers import (
     restore_network_for_unit_without_ip_change,
 )
 
+WATCHER_APP_NAME = "postgresql-watcher"
+
 
 async def start_writes(ops_test: OpsTest) -> None:
     """Start continuous writes to PostgreSQL (assumes relation already exists)."""
@@ -144,9 +146,6 @@ async def verify_raft_cluster_health(
     logger.info("Raft cluster health verified successfully")
 
 
-WATCHER_APP_NAME = "pg-watcher"
-
-
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy_stereo_mode(ops_test: OpsTest, charm) -> None:
     """Build and deploy PostgreSQL in stereo mode with watcher.
@@ -154,8 +153,6 @@ async def test_build_and_deploy_stereo_mode(ops_test: OpsTest, charm) -> None:
     Deploys 2 PostgreSQL units and a watcher (same charm, role=watcher),
     then relates them to form a 3-node Raft cluster for quorum.
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     # Check if PostgreSQL is already deployed (e.g., from a previous test run)
     # If so, verify it's in the expected state or skip deployment
     if DATABASE_APP_NAME in ops_test.model.applications:
@@ -171,7 +168,7 @@ async def test_build_and_deploy_stereo_mode(ops_test: OpsTest, charm) -> None:
 
         # If state is incorrect, we need to clean up and redeploy
         logger.info(f"Unexpected state (pg_units={pg_units}), cleaning up...")
-        for app in [DATABASE_APP_NAME, WATCHER_APP_NAME, APPLICATION_NAME]:
+        for app in [WATCHER_APP_NAME, WATCHER_APP_NAME, APPLICATION_NAME]:
             if app in ops_test.model.applications:
                 await ops_test.model.remove_application(app, block_until_done=True)
 
@@ -179,10 +176,11 @@ async def test_build_and_deploy_stereo_mode(ops_test: OpsTest, charm) -> None:
         # Deploy PostgreSQL with 2 units from the start
         logger.info("Deploying PostgreSQL charm with 2 units...")
         await ops_test.model.deploy(
-            charm,
+            DATABASE_APP_NAME,
             application_name=DATABASE_APP_NAME,
             num_units=2,
             series="noble",
+            channel="16/edge",
             config={"profile": "testing", "synchronous-mode-strict": False},
         )
         # Deploy watcher using the same charm with role=watcher
@@ -192,7 +190,7 @@ async def test_build_and_deploy_stereo_mode(ops_test: OpsTest, charm) -> None:
             application_name=WATCHER_APP_NAME,
             num_units=1,
             series="noble",
-            config={"role": "watcher", "profile": "testing"},
+            config={"profile": "testing"},
         )
         logger.info("Deploying test application...")
         await ops_test.model.deploy(
@@ -246,8 +244,7 @@ async def test_build_and_deploy_stereo_mode(ops_test: OpsTest, charm) -> None:
 
 
 @pytest.mark.abort_on_fail
-# async def test_replica_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
-async def test_replica_shutdown_with_watcher(ops_test: OpsTest) -> None:
+async def test_replica_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
     """Test replica shutdown with watcher providing quorum.
 
     Expected behavior:
@@ -255,8 +252,6 @@ async def test_replica_shutdown_with_watcher(ops_test: OpsTest) -> None:
     - Clients connected to replica should be re-routed to primary
     - No significant outage (less than a minute)
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     await start_writes(ops_test)
 
     # Get current cluster roles
@@ -319,8 +314,7 @@ async def test_replica_shutdown_with_watcher(ops_test: OpsTest) -> None:
 
 
 @pytest.mark.abort_on_fail
-# async def test_primary_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
-async def test_primary_shutdown_with_watcher(ops_test: OpsTest) -> None:
+async def test_primary_shutdown_with_watcher(ops_test: OpsTest, continuous_writes) -> None:
     """Test primary shutdown with watcher providing quorum.
 
     Expected behavior:
@@ -329,8 +323,6 @@ async def test_primary_shutdown_with_watcher(ops_test: OpsTest) -> None:
     - Clients re-routed to new primary
     - When old primary is healthy, it should become a replica
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     await start_writes(ops_test)
 
     # Get current cluster roles
@@ -433,16 +425,13 @@ async def test_primary_shutdown_with_watcher(ops_test: OpsTest) -> None:
 
 
 @pytest.mark.abort_on_fail
-# async def test_watcher_shutdown_no_outage(ops_test: OpsTest, continuous_writes) -> None:
-async def test_watcher_shutdown_no_outage(ops_test: OpsTest) -> None:
+async def test_watcher_shutdown_no_outage(ops_test: OpsTest, continuous_writes) -> None:
     """Test watcher shutdown - should not cause service outage.
 
     Expected behavior:
     - No outage experienced by either primary or replica
     - Cluster continues to function (but loses quorum guarantee)
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     await start_writes(ops_test)
 
     # Get current cluster state
@@ -485,8 +474,7 @@ async def test_watcher_shutdown_no_outage(ops_test: OpsTest) -> None:
 
 @pytest.mark.abort_on_fail
 async def test_primary_network_isolation_with_watcher(
-    # ops_test: OpsTest, continuous_writes
-    ops_test: OpsTest,
+    ops_test: OpsTest, continuous_writes
 ) -> None:
     """Test network isolation of primary with watcher.
 
@@ -495,8 +483,6 @@ async def test_primary_network_isolation_with_watcher(
     - Replica promoted to primary
     - When network restored, old primary becomes replica
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     await start_writes(ops_test)
 
     # Get current cluster state
@@ -570,8 +556,7 @@ async def test_primary_network_isolation_with_watcher(
 
 @pytest.mark.abort_on_fail
 async def test_replica_network_isolation_with_watcher(
-    # ops_test: OpsTest, continuous_writes
-    ops_test: OpsTest,
+    ops_test: OpsTest, continuous_writes
 ) -> None:
     """Test network isolation of replica with watcher.
 
@@ -584,8 +569,6 @@ async def test_replica_network_isolation_with_watcher(
     Note: This test uses iptables-based network isolation to preserve the replica's IP,
     avoiding the complexity of IP changes when using eth0 device removal.
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     await start_writes(ops_test)
 
     # Get current cluster state - use use_ip_from_inside=True because the previous test
@@ -646,16 +629,13 @@ async def test_replica_network_isolation_with_watcher(
 
 
 @pytest.mark.abort_on_fail
-# async def test_watcher_network_isolation(ops_test: OpsTest, continuous_writes) -> None:
-async def test_watcher_network_isolation(ops_test: OpsTest) -> None:
+async def test_watcher_network_isolation(ops_test: OpsTest, continuous_writes) -> None:
     """Test network isolation of watcher.
 
     Expected behavior:
     - No service outage for PostgreSQL cluster
     - Cluster loses quorum guarantee but continues operating
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     await start_writes(ops_test)
 
     # Get watcher machine
@@ -700,18 +680,17 @@ async def test_multi_cluster_watcher(ops_test: OpsTest, charm) -> None:
     to multiple PostgreSQL clusters simultaneously. Each relation gets its own
     Raft instance with a dedicated port and data directory.
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     second_pg_app = "postgresql-b"
 
     try:
         # Deploy a second PostgreSQL cluster
         logger.info("Deploying second PostgreSQL cluster for multi-cluster watcher test")
         await ops_test.model.deploy(
-            charm,
+            DATABASE_APP_NAME,
             application_name=second_pg_app,
             num_units=2,
             series="noble",
+            channel="16/edge",
             config={"profile": "testing", "synchronous-mode-strict": False},
         )
         await ops_test.model.wait_for_idle(
@@ -776,8 +755,6 @@ async def test_watcher_production_profile_az_blocked(ops_test: OpsTest, charm) -
     Since watcher-offer has limit: 1, we must remove the existing testing watcher
     before deploying the production one, then restore it afterward.
     """
-    pytest.skip("Needs both sides of the relation")
-    return
     production_watcher = "pg-watcher-prod"
 
     # Remove existing watcher to free the watcher-offer relation slot
@@ -795,7 +772,7 @@ async def test_watcher_production_profile_az_blocked(ops_test: OpsTest, charm) -
             application_name=production_watcher,
             num_units=1,
             series="noble",
-            config={"role": "watcher", "profile": "production"},
+            config={"profile": "production"},
         )
 
         # Wait for initial install
@@ -852,7 +829,7 @@ async def test_watcher_production_profile_az_blocked(ops_test: OpsTest, charm) -
             application_name=WATCHER_APP_NAME,
             num_units=1,
             series="noble",
-            config={"role": "watcher", "profile": "testing"},
+            config={"profile": "testing"},
         )
         await ops_test.model.wait_for_idle(
             apps=[WATCHER_APP_NAME],

@@ -512,6 +512,12 @@ class WatcherRequirerHandler(Object):
         # Stop and clean up the Raft controller for this relation
         controller = RaftController(self.charm, instance_id=f"rel{relation_id}")
         controller.remove_service()
+        if (
+            (raft_password := self._get_raft_password(event.relation))
+            and (partner_addrs := self._get_raft_partner_addrs(event.relation))
+            and (port := self._get_port_for_relation(relation_id))
+        ):
+            controller.remove_raft_member(f"{self.unit_ip}:{port}", raft_password, partner_addrs)
 
         # Release the port allocation
         self._release_port_for_relation(relation_id)
