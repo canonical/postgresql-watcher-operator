@@ -513,7 +513,8 @@ class WatcherRequirerHandler(Object):
         controller = RaftController(self.charm, instance_id=f"rel{relation_id}")
         controller.remove_service()
         if (
-            (raft_password := self._get_raft_password(event.relation))
+            self.charm.unit.is_leader()
+            and (raft_password := self._get_raft_password(event.relation))
             and (partner_addrs := self._get_raft_partner_addrs(event.relation))
             and (port := self._get_port_for_relation(relation_id))
         ):
