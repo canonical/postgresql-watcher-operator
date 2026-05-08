@@ -292,6 +292,7 @@ class TestWatcherRelationLifecycle:
         with (
             patch.object(WatcherRequirerHandler, "__init__", return_value=None),
             patch("relations.watcher_requirer.RaftController.remove_service") as _remove_service,
+            patch.object(WatcherRequirerHandler, "_get_raft_partner_addrs", return_value=[]),
         ):
             handler = WatcherRequirerHandler.__new__(WatcherRequirerHandler)
             handler.charm = mock_charm

@@ -63,6 +63,7 @@ class WatcherRequirerHandler(Object):
         self.framework.observe(self.charm.on.leader_elected, self._on_leader_elected)
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
+        self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
 
         # Relation events
         self.framework.observe(
@@ -271,6 +272,9 @@ class WatcherRequirerHandler(Object):
         # Don't set ActiveStatus here -- let _on_update_status promote to Active
         # once Raft is actually connected
         self.charm.unit.status = WaitingStatus("Starting Raft connection")
+
+    def _on_config_changed(self, _) -> None:
+        self._update_unit_address_if_changed()
 
     def _on_leader_elected(self, _) -> None:
         self._update_unit_address_if_changed()
@@ -512,6 +516,13 @@ class WatcherRequirerHandler(Object):
         # Stop and clean up the Raft controller for this relation
         controller = RaftController(self.charm, instance_id=f"rel{relation_id}")
         controller.remove_service()
+        if (
+            self.charm.unit.is_leader()
+            and (raft_password := self._get_raft_password(event.relation))
+            and (partner_addrs := self._get_raft_partner_addrs(event.relation))
+            and (port := self._get_port_for_relation(relation_id))
+        ):
+            controller.remove_raft_member(f"{self.unit_ip}:{port}", raft_password, partner_addrs)
 
         # Release the port allocation
         self._release_port_for_relation(relation_id)

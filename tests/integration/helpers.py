@@ -20,7 +20,7 @@ from tenacity import (
 
 CHARM_BASE = "ubuntu@22.04"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-DATABASE_APP_NAME = METADATA["name"]
+DATABASE_APP_NAME = "postgresql"
 APPLICATION_NAME = "postgresql-test-app"
 DATA_INTEGRATOR_APP_NAME = "data-integrator"
 DATABASE_DEFAULT_NAME = "postgres"
