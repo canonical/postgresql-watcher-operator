@@ -30,7 +30,6 @@ from charmlibs.systemd import (
     service_enable,
     service_restart,
     service_running,
-    service_start,
     service_stop,
 )
 from jinja2 import Template
@@ -182,25 +181,43 @@ class RaftController:
         logger.info(f"Raft controller configured: self={self_addr}, partners={partner_addrs}")
         return True
 
-    def start(self) -> bool:
-        """Start the Raft controller service.
+    def check_watcher_connection(
+        self, member_address: str, raft_password: str, partner_addrs: list[str], port: int
+    ) -> None:
+        """Verify that the watcher has joined the Raft cluster."""
+        watcher_addr = f"{member_address}:{port}"
 
-        Returns:
-            True if started successfully, False otherwise.
-        """
-        if service_running(self.service_name):
-            logger.debug("Raft controller already running")
-            return True
+        # Get the status of the raft cluster.
+        syncobj_util = TcpUtility(password=raft_password, timeout=3)
 
+        enabled = False
         try:
-            # Enable and start the service
-            service_enable(self.service_name)
-            service_start(self.service_name)
-            logger.info(f"Started Raft controller service {self.service_name}")
-            return True
-        except SystemdError as e:
-            logger.error(f"Failed to start Raft controller: {e}")
-            return False
+            for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(2)):
+                with attempt:
+                    if not (raft_status := syncobj_util.executeCommand(watcher_addr, ["status"])):
+                        raise Exception("Raft watcher no status")
+                    logger.debug(f"Observer raft: {raft_status}")
+                    for key in raft_status:
+                        if key.startswith(RAFT_PARTNER_PREFIX) and raft_status[key] == 2:
+                            enabled = True
+                            break
+                    if not enabled:
+                        # Ping the other members as a sanity check
+                        for addr in partner_addrs:
+                            try:
+                                logger.debug(
+                                    f"{addr} Raft: {syncobj_util.executeCommand(f'{addr}:{RAFT_PORT}', ['status'])}"
+                                )
+                            except Exception:
+                                logger.debug(f"Unable to connect to {addr}")
+                                continue
+                            logger.warning("Unable to connect to peers")
+                            self.restart()
+                            raise Exception("Raft watcher not connected")
+                        logger.warning("No Raft members reachable")
+                        raise Exception("No Raft members reachable")
+        except RetryError:
+            logger.warning("Unable to reconnect watcher")
 
     def stop(self) -> bool:
         """Stop the Raft controller service.
@@ -270,12 +287,11 @@ class RaftController:
         addrs = [watcher_addr, *[f"{addr}:{RAFT_PORT}" for addr in partner_addrs]]
         for raft_host in addrs:
             try:
-                raft_status = syncobj_util.executeCommand(raft_host, ["status"])
+                if not (raft_status := syncobj_util.executeCommand(raft_host, ["status"])):
+                    logger.warning("Collect stale addrs: No raft status")
+                    continue
             except Exception as e:
                 logger.warning(f"Collect stale addrs: Cannot connect to raft cluster: {e}")
-                continue
-            if not raft_status:
-                logger.warning("Collect stale addrs: No raft status")
                 continue
             for key in raft_status:
                 if (

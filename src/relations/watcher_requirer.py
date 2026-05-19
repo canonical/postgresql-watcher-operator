@@ -323,6 +323,9 @@ class WatcherRequirerHandler(Object):
                         f"Restarting Raft controller for relation {relation.id} due to IP change"
                     )
                     raft_controller.restart()
+                    raft_controller.check_watcher_connection(
+                        new_address, raft_password, partner_addrs, port
+                    )
                 for stale_addr in raft_controller.get_stale_watchers(
                     new_address, raft_password, partner_addrs, port
                 ):
@@ -490,6 +493,9 @@ class WatcherRequirerHandler(Object):
                     f"Restarting Raft controller for relation {relation.id} to apply config changes"
                 )
                 raft_controller.restart()
+                raft_controller.check_watcher_connection(
+                    unit_ip, raft_password, partner_addrs, port
+                )
 
             relation.data[self.charm.unit]["unit-address"] = unit_ip
             relation.data[self.charm.app]["watcher-raft-port"] = str(port)
