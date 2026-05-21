@@ -19,7 +19,7 @@ charm-refresh = "^3.1.0.2"
 httpx = "^0.28.1"
 charmlibs-snap = "^1.0.1"
 charmlibs-systemd = "^1.0.0"
-postgresql-charms-single-kernel = "16.1.11"
+postgresql-charms-single-kernel = "16.1.12"
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_models.py
@@ -81,7 +81,6 @@ branch = true
 
 [tool.coverage.report]
 show_missing = true
-exclude_lines = ["logger\\.debug"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

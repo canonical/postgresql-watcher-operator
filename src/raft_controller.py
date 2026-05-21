@@ -185,6 +185,10 @@ class RaftController:
         self, member_address: str, raft_password: str, partner_addrs: list[str], port: int
     ) -> None:
         """Verify that the watcher has joined the Raft cluster."""
+        if not partner_addrs:
+            logger.debug("Check connection early exit: No partners provided")
+            return
+
         watcher_addr = f"{member_address}:{port}"
 
         # Get the status of the raft cluster.
