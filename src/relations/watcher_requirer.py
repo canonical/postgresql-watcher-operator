@@ -135,7 +135,7 @@ class WatcherRequirerHandler(Object):
 
         # Assign next available port starting from RAFT_PORT
         used_ports = set(allocations.values())
-        port = RAFT_PORT + 1
+        port = RAFT_PORT
         while port in used_ports:
             port += 1
 
@@ -323,10 +323,12 @@ class WatcherRequirerHandler(Object):
                         f"Restarting Raft controller for relation {relation.id} due to IP change"
                     )
                     raft_controller.restart()
-                for stale_addr in raft_controller.get_stale_watchers(
+                    raft_controller.check_watcher_connection(
+                        new_address, raft_password, partner_addrs, port
+                    )
+                raft_controller.cleanup_raft_cluster(
                     new_address, raft_password, partner_addrs, port
-                ):
-                    raft_controller.remove_raft_member(stale_addr, raft_password, partner_addrs)
+                )
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
         """Handle update status event in watcher mode."""
@@ -490,6 +492,9 @@ class WatcherRequirerHandler(Object):
                     f"Restarting Raft controller for relation {relation.id} to apply config changes"
                 )
                 raft_controller.restart()
+                raft_controller.check_watcher_connection(
+                    unit_ip, raft_password, partner_addrs, port
+                )
 
             relation.data[self.charm.unit]["unit-address"] = unit_ip
             relation.data[self.charm.app]["watcher-raft-port"] = str(port)
