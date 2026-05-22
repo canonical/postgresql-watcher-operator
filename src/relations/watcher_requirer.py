@@ -326,10 +326,9 @@ class WatcherRequirerHandler(Object):
                     raft_controller.check_watcher_connection(
                         new_address, raft_password, partner_addrs, port
                     )
-                for stale_addr in raft_controller.get_stale_watchers(
+                raft_controller.cleanup_raft_cluster(
                     new_address, raft_password, partner_addrs, port
-                ):
-                    raft_controller.remove_raft_member(stale_addr, raft_password, partner_addrs)
+                )
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
         """Handle update status event in watcher mode."""
