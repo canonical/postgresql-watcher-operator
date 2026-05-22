@@ -135,7 +135,7 @@ class WatcherRequirerHandler(Object):
 
         # Assign next available port starting from RAFT_PORT
         used_ports = set(allocations.values())
-        port = RAFT_PORT + 1
+        port = RAFT_PORT
         while port in used_ports:
             port += 1
 
