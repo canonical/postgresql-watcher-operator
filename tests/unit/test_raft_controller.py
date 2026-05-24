@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from jinja2 import Template
 from pytest import fixture
+from single_kernel_postgresql.config.literals import Substrates
 from tenacity import stop_after_delay, wait_fixed
 
 from constants import RAFT_PARTNER_PREFIX
@@ -41,10 +42,15 @@ def test_configure(tmp_path: Path, controller: RaftController):
         assert controller.configure(2222, "10.0.0.1", ["10.0.0.2"], "secret")
 
         assert _create_directory.call_count == 2
-        _create_directory.assert_any_call(f"{tmp_path}/watcher-raft/rel42", 0o700)
-        _create_directory.assert_any_call(f"{tmp_path}/watcher-raft/rel42/raft", 0o700)
+        _create_directory.assert_any_call(Substrates.VM, f"{tmp_path}/watcher-raft/rel42", 0o700)
+        _create_directory.assert_any_call(
+            Substrates.VM, f"{tmp_path}/watcher-raft/rel42/raft", 0o700
+        )
         _render_file.assert_called_once_with(
-            f"{tmp_path}/watcher-raft/rel42/patroni-raft.yaml", expected_content, 0o600
+            Substrates.VM,
+            f"{tmp_path}/watcher-raft/rel42/patroni-raft.yaml",
+            expected_content,
+            0o600,
         )
 
 
@@ -82,7 +88,9 @@ def test_install_service_uses_patroni_profile_execstart(
     ):
         install_service()
 
-    _render_file.assert_called_once_with(SERVICE_FILE, expected_content, 0o644, change_owner=False)
+    _render_file.assert_called_once_with(
+        Substrates.VM, SERVICE_FILE, expected_content, 0o644, change_owner=False
+    )
     _daemon_reload.assert_called_once_with()
 
 

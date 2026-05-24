@@ -34,6 +34,7 @@ from charmlibs.systemd import (
 )
 from jinja2 import Template
 from pysyncobj.utility import TcpUtility
+from single_kernel_postgresql.config.literals import Substrates
 from single_kernel_postgresql.utils import (
     create_directory,
     parallel_patroni_get_request,
@@ -87,7 +88,7 @@ def install_service() -> None:
         template = Template(file.read())
 
     rendered = template.render(config_file=RAFT_BASE_DIR)
-    render_file(SERVICE_FILE, rendered, 0o644, change_owner=False)
+    render_file(Substrates.VM, SERVICE_FILE, rendered, 0o644, change_owner=False)
 
     # Reload systemd to pick up the new service
     daemon_reload()
@@ -147,8 +148,8 @@ class RaftController:
             partner_addrs = []
 
         # Ensure data directory exists
-        create_directory(self.data_dir, 0o700)
-        create_directory(f"{self.data_dir}/raft", 0o700)
+        create_directory(Substrates.VM, self.data_dir, 0o700)
+        create_directory(Substrates.VM, f"{self.data_dir}/raft", 0o700)
 
         if not self_addr or not password:
             logger.warning("Cannot install service: not configured")
@@ -178,9 +179,9 @@ class RaftController:
             password=password,
             data_dir=self.data_dir,
         )
-        render_file(self.config_file, rendered, 0o600)
+        render_file(Substrates.VM, self.config_file, rendered, 0o600)
         if cas:
-            render_file(self.ca_file, cas, 0o600)
+            render_file(Substrates.VM, self.ca_file, cas, 0o600)
 
         logger.info(f"Raft controller configured: self={self_addr}, partners={partner_addrs}")
         return True
