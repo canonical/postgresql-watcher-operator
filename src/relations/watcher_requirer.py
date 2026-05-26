@@ -232,6 +232,9 @@ class WatcherRequirerHandler(Object):
             return name
         return f"relation-{relation.id}"
 
+    def _get_related_ips(self, relation: Relation) -> list[str]:
+        return [data["unit-address"] for data in relation.data.values() if "unit-address" in data]
+
     def _get_standby_clusters(self, relation: Relation) -> list[str]:
         """Get related standby clusters from the relation app data.
 
@@ -327,7 +330,7 @@ class WatcherRequirerHandler(Object):
                         new_address, raft_password, partner_addrs, port
                     )
                 raft_controller.cleanup_raft_cluster(
-                    new_address, raft_password, partner_addrs, port
+                    new_address, raft_password, self._get_related_ips(relation), port
                 )
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
