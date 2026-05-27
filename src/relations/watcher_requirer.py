@@ -330,7 +330,7 @@ class WatcherRequirerHandler(Object):
                         new_address, raft_password, partner_addrs, port
                     )
                 raft_controller.cleanup_raft_cluster(
-                    new_address, raft_password, partner_addrs, port
+                    new_address, raft_password, self._get_related_ips(relation), port
                 )
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
@@ -479,7 +479,9 @@ class WatcherRequirerHandler(Object):
             port = self._get_port_for_relation(relation.id)
 
             raft_controller = RaftController(self.charm, f"rel{relation.id}")
-            raft_controller.cleanup_raft_cluster(self.unit_ip, raft_password, partner_addrs, port)
+            raft_controller.cleanup_raft_cluster(
+                self.unit_ip, raft_password, self._get_related_ips(relation), port
+            )
             if self._is_disabled(relation) or not self._should_watcher_vote(partner_addrs):
                 logger.debug("Disabling the watcher")
                 raft_controller.remove_service()
