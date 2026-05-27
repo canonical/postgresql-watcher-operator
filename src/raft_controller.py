@@ -302,7 +302,7 @@ class RaftController:
                             member_ip = member_addr.split(":")[0]
 
                             # Check if this is a stale watcher (not a PostgreSQL node and not current watcher)
-                            if member_ip not in partner_addrs and member_addr != member_address:
+                            if member_ip not in partner_addrs and member_ip != member_address:
                                 logger.info(f"Removing stale Raft member: {member_addr}")
                                 self.remove_raft_member(member_addr, raft_password, [])
                     return True
