@@ -187,14 +187,12 @@ class RaftController:
         return True
 
     def check_watcher_connection(
-        self, member_address: str, raft_password: str, partner_addrs: list[str], port: int
+        self, member_address: str, raft_password: str, partner_addrs: list[str]
     ) -> None:
         """Verify that the watcher has joined the Raft cluster."""
         if not partner_addrs:
             logger.debug("Check connection early exit: No partners provided")
             return
-
-        watcher_addr = f"{member_address}:{port}"
 
         # Get the status of the raft cluster.
         syncobj_util = TcpUtility(password=raft_password, timeout=3)
@@ -203,7 +201,9 @@ class RaftController:
         try:
             for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(2)):
                 with attempt:
-                    if not (raft_status := syncobj_util.executeCommand(watcher_addr, ["status"])):
+                    if not (
+                        raft_status := syncobj_util.executeCommand(member_address, ["status"])
+                    ):
                         raise Exception("Raft watcher no status")
                     logger.debug(f"Observer raft: {raft_status}")
                     for key in raft_status:
@@ -282,17 +282,15 @@ class RaftController:
             return False
 
     def cleanup_raft_cluster(
-        self, member_address: str, raft_password: str, partner_addrs: list[str], port: int
+        self, member_address: str, raft_password: str, partner_addrs: list[str]
     ) -> bool:
         """Cleanup RAFT members not belonging to the current cluster or not a related watcher."""
         # Get Raft cluster status to find all members
         try:
-            watcher_addr = f"{member_address}:{port}"
-
             # Get the status of the raft cluster.
             syncobj_util = TcpUtility(password=raft_password, timeout=3)
 
-            for raft_host in [watcher_addr, *[f"{addr}:{RAFT_PORT}" for addr in partner_addrs]]:
+            for raft_host in [member_address, *[f"{addr}:{RAFT_PORT}" for addr in partner_addrs]]:
                 if raft_status := syncobj_util.executeCommand(raft_host, ["status"]):
                     # Find all partner nodes in the Raft cluster
                     # Keys look like: partner_node_status_server_10.131.50.142:2222
@@ -302,7 +300,7 @@ class RaftController:
                             member_ip = member_addr.split(":")[0]
 
                             # Check if this is a stale watcher (not a PostgreSQL node and not current watcher)
-                            if member_ip not in partner_addrs and member_ip != member_address:
+                            if member_ip not in partner_addrs and member_addr != member_address:
                                 logger.info(f"Removing stale Raft member: {member_addr}")
                                 self.remove_raft_member(member_addr, raft_password, [])
                     return True

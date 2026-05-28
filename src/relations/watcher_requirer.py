@@ -313,6 +313,7 @@ class WatcherRequirerHandler(Object):
                 and (partner_addrs := self._get_raft_partner_addrs(relation))
             ):
                 port = self._get_port_for_relation(relation.id)
+                watcher_addr = f"{new_address}:{port}"
                 raft_controller = RaftController(self.charm, f"rel{relation.id}")
                 changed = raft_controller.configure(
                     port,
@@ -327,10 +328,10 @@ class WatcherRequirerHandler(Object):
                     )
                     raft_controller.restart()
                     raft_controller.check_watcher_connection(
-                        new_address, raft_password, partner_addrs, port
+                        watcher_addr, raft_password, partner_addrs
                     )
                 raft_controller.cleanup_raft_cluster(
-                    new_address, raft_password, self._get_related_ips(relation), port
+                    watcher_addr, raft_password, self._get_related_ips(relation)
                 )
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
@@ -477,10 +478,11 @@ class WatcherRequirerHandler(Object):
 
             # Get or assign a port for this relation
             port = self._get_port_for_relation(relation.id)
+            watcher_addr = f"{self.unit_ip}:{port}"
 
             raft_controller = RaftController(self.charm, f"rel{relation.id}")
             raft_controller.cleanup_raft_cluster(
-                self.unit_ip, raft_password, self._get_related_ips(relation), port
+                watcher_addr, raft_password, self._get_related_ips(relation)
             )
             if self._is_disabled(relation) or not self._should_watcher_vote(partner_addrs):
                 logger.debug("Disabling the watcher")
@@ -499,7 +501,7 @@ class WatcherRequirerHandler(Object):
                 )
                 raft_controller.restart()
                 raft_controller.check_watcher_connection(
-                    unit_ip, raft_password, partner_addrs, port
+                    watcher_addr, raft_password, partner_addrs
                 )
 
             relation.data[self.charm.unit]["unit-address"] = unit_ip
