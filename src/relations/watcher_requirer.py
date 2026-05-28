@@ -281,14 +281,15 @@ class WatcherRequirerHandler(Object):
 
     def _update_unit_address_if_changed(self) -> None:
         """Update unit-address in relation data if IP has changed, for ALL relations."""
-        if not (new_address := self.unit_ip):
+        if not (new_address := self.unit_ip) or not self.charm.unit.is_leader():
             return
+
+        current_address = self.charm.app_peer_data.get("unit-address")
+        address_changed = current_address != new_address
 
         unit_az = os.environ.get("JUJU_AVAILABILITY_ZONE")
         for relation in self.model.relations.get(WATCHER_RELATION, []):
-            current_address = relation.data[self.charm.unit].get("unit-address")
             current_az = relation.data[self.charm.app].get("unit-az")
-            address_changed = current_address != new_address
             az_changed = bool(unit_az and current_az != unit_az)
 
             if not address_changed and not az_changed:
@@ -328,6 +329,7 @@ class WatcherRequirerHandler(Object):
                         watcher_addr, raft_password, partner_addrs
                     )
                 raft_controller.cleanup_raft_cluster(watcher_addr, raft_password, partner_addrs)
+        self.charm.app_peer_data["ip-address"] = new_address
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
         """Handle update status event in watcher mode."""
