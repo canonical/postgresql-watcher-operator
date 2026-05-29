@@ -329,7 +329,7 @@ class WatcherRequirerHandler(Object):
                         watcher_addr, raft_password, partner_addrs
                     )
                 raft_controller.cleanup_raft_cluster(watcher_addr, raft_password, partner_addrs)
-        self.charm.app_peer_data["ip-address"] = new_address
+        self.charm.app_peer_data["unit-address"] = new_address
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
         """Handle update status event in watcher mode."""
