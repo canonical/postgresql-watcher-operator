@@ -102,14 +102,14 @@ def test_check_watcher_connection(controller: RaftController):
         patch("raft_controller.stop_after_attempt", return_value=stop_after_delay(0)),
     ):
         # No partners
-        controller.check_watcher_connection("1.1.1.1", "testpass", [], 2223)
+        controller.check_watcher_connection("1.1.1.1:2223", "testpass", [])
 
         assert not _tcputility.called
 
         # Can't get watcher status
         _tcputility.return_value.executeCommand.side_effect = [{}]
 
-        controller.check_watcher_connection("1.1.1.1", "testpass", ["2.2.2.2", "3.3.3.3"], 2223)
+        controller.check_watcher_connection("1.1.1.1:2223", "testpass", ["2.2.2.2", "3.3.3.3"])
 
         _tcputility.assert_called_once_with(password="testpass", timeout=3)
         _tcputility.return_value.executeCommand.assert_called_once_with("1.1.1.1:2223", ["status"])
@@ -124,7 +124,7 @@ def test_check_watcher_connection(controller: RaftController):
         }
         _tcputility.return_value.executeCommand.side_effect = [raft_status]
 
-        controller.check_watcher_connection("1.1.1.1", "testpass", ["2.2.2.2", "3.3.3.3"], 2223)
+        controller.check_watcher_connection("1.1.1.1:2223", "testpass", ["2.2.2.2", "3.3.3.3"])
 
         _tcputility.assert_called_once_with(password="testpass", timeout=3)
         _tcputility.return_value.executeCommand.assert_called_once_with("1.1.1.1:2223", ["status"])
@@ -139,7 +139,7 @@ def test_check_watcher_connection(controller: RaftController):
         }
         _tcputility.return_value.executeCommand.side_effect = [raft_status, Exception, Exception]
 
-        controller.check_watcher_connection("1.1.1.1", "testpass", ["2.2.2.2", "3.3.3.3"], 2223)
+        controller.check_watcher_connection("1.1.1.1:2223", "testpass", ["2.2.2.2", "3.3.3.3"])
 
         _tcputility.assert_called_once_with(password="testpass", timeout=3)
         assert _tcputility.return_value.executeCommand.call_count == 3
@@ -157,7 +157,7 @@ def test_check_watcher_connection(controller: RaftController):
         }
         _tcputility.return_value.executeCommand.side_effect = [raft_status, Exception, {1: 2}]
 
-        controller.check_watcher_connection("1.1.1.1", "testpass", ["2.2.2.2", "3.3.3.3"], 2223)
+        controller.check_watcher_connection("1.1.1.1:2223", "testpass", ["2.2.2.2", "3.3.3.3"])
 
         _tcputility.assert_called_once_with(password="testpass", timeout=3)
         assert _tcputility.return_value.executeCommand.call_count == 3

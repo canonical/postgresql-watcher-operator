@@ -98,7 +98,7 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
                 handler.setFormatter(logging.Formatter("{name}:{message}", style="{"))
 
         # Watcher mode: lightweight Raft witness, no PostgreSQL
-        self._init_watcher_mode()
+        self.watcher_requirer = WatcherRequirerHandler(self)
         # Set tracing_endpoint for @trace_charm decorator compatibility
         self.tracing_endpoint = None
 
@@ -118,12 +118,6 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
                 self._post_snap_refresh(self.refresh)
             else:
                 self.refresh.next_unit_allowed_to_refresh = True
-
-    def _init_watcher_mode(self):
-        """Initialize the charm in watcher mode (lightweight Raft witness)."""
-        self.watcher_requirer = WatcherRequirerHandler(self)
-        # Watcher mode delegates all event handling to WatcherRequirerHandler.
-        # We still observe leader_elected to persist the role in peer data.
 
     def _post_snap_refresh(self, refresh: charm_refresh.Machines):
         """Start PostgreSQL, check if this app and unit are healthy, and allow next unit to refresh.

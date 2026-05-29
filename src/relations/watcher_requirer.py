@@ -281,14 +281,15 @@ class WatcherRequirerHandler(Object):
 
     def _update_unit_address_if_changed(self) -> None:
         """Update unit-address in relation data if IP has changed, for ALL relations."""
-        if not (new_address := self.unit_ip):
+        if not (new_address := self.unit_ip) or not self.charm.unit.is_leader():
             return
+
+        current_address = self.charm.app_peer_data.get("unit-address")
+        address_changed = current_address != new_address
 
         unit_az = os.environ.get("JUJU_AVAILABILITY_ZONE")
         for relation in self.model.relations.get(WATCHER_RELATION, []):
-            current_address = relation.data[self.charm.unit].get("unit-address")
             current_az = relation.data[self.charm.app].get("unit-az")
-            address_changed = current_address != new_address
             az_changed = bool(unit_az and current_az != unit_az)
 
             if not address_changed and not az_changed:
@@ -310,6 +311,7 @@ class WatcherRequirerHandler(Object):
                 and (partner_addrs := self._get_raft_partner_addrs(relation))
             ):
                 port = self._get_port_for_relation(relation.id)
+                watcher_addr = f"{new_address}:{port}"
                 raft_controller = RaftController(self.charm, f"rel{relation.id}")
                 changed = raft_controller.configure(
                     port,
@@ -324,11 +326,10 @@ class WatcherRequirerHandler(Object):
                     )
                     raft_controller.restart()
                     raft_controller.check_watcher_connection(
-                        new_address, raft_password, partner_addrs, port
+                        watcher_addr, raft_password, partner_addrs
                     )
-                raft_controller.cleanup_raft_cluster(
-                    new_address, raft_password, partner_addrs, port
-                )
+                raft_controller.cleanup_raft_cluster(watcher_addr, raft_password, partner_addrs)
+        self.charm.app_peer_data["unit-address"] = new_address
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
         """Handle update status event in watcher mode."""
@@ -474,8 +475,10 @@ class WatcherRequirerHandler(Object):
 
             # Get or assign a port for this relation
             port = self._get_port_for_relation(relation.id)
+            watcher_addr = f"{self.unit_ip}:{port}"
 
             raft_controller = RaftController(self.charm, f"rel{relation.id}")
+            raft_controller.cleanup_raft_cluster(watcher_addr, raft_password, partner_addrs)
             if self._is_disabled(relation) or not self._should_watcher_vote(partner_addrs):
                 logger.debug("Disabling the watcher")
                 raft_controller.remove_service()
@@ -493,7 +496,7 @@ class WatcherRequirerHandler(Object):
                 )
                 raft_controller.restart()
                 raft_controller.check_watcher_connection(
-                    unit_ip, raft_password, partner_addrs, port
+                    watcher_addr, raft_password, partner_addrs
                 )
 
             relation.data[self.charm.unit]["unit-address"] = unit_ip

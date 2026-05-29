@@ -116,7 +116,7 @@ async def verify_raft_cluster_health(
                 # Check Raft status using the password
                 syncobj_util = TcpUtility(password=password, timeout=3)
                 status = syncobj_util.executeCommand(self_addr, ["status"])
-                logger.info(f"Raft status on {unit.name}: {status}...")
+                logger.info(f"Raft status on {unit.name}: {status}")
 
                 # Verify quorum
                 assert status["has_quorum"] is True, f"Unit {unit.name} does not have Raft quorum"
