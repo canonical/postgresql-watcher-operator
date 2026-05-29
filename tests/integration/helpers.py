@@ -9,7 +9,6 @@ from pathlib import Path
 import psycopg2
 import requests
 import yaml
-from constants import PEER
 from juju.model import Model
 from pytest_operator.plugin import OpsTest
 from tenacity import (
@@ -17,6 +16,8 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
+
+from constants import PEER
 
 CHARM_BASE = "ubuntu@22.04"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
