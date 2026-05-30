@@ -4,6 +4,7 @@
 import itertools
 import json
 import logging
+import subprocess
 from pathlib import Path
 
 import psycopg2
@@ -195,6 +196,17 @@ async def run_command_on_unit(ops_test: OpsTest, unit_name: str, command: str) -
             f"Expected command '{command}' to succeed instead it failed: {return_code}"
         )
     return stdout
+
+
+async def stop_machine(ops_test: OpsTest, machine_name: str) -> None:
+    """Stop the machine where a unit run on.
+
+    Args:
+        ops_test: The ops test framework instance
+        machine_name: The name of the machine to stop
+    """
+    stop_machine_command = f"lxc stop {machine_name}"
+    subprocess.check_call(stop_machine_command.split())
 
 
 ### Ported Mysql jubilant helpers

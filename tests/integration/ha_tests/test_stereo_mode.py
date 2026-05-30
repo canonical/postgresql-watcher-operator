@@ -25,7 +25,7 @@ from yaml import safe_load
 
 from constants import RAFT_PARTNER_PREFIX
 
-from ..helpers import APPLICATION_NAME, DATABASE_APP_NAME
+from ..helpers import APPLICATION_NAME, DATABASE_APP_NAME, get_machine_from_unit, stop_machine
 from .helpers import APPLICATION_NAME as TEST_APP_NAME
 from .helpers import (
     are_writes_increasing,
@@ -261,6 +261,7 @@ async def test_replica_shutdown_with_watcher(ops_test: OpsTest, continuous_write
     logger.info(f"Shutting down replica: {replica}")
 
     # Shutdown the replica
+    await stop_machine(ops_test, await get_machine_from_unit(ops_test, replica))
     await ops_test.model.destroy_unit(replica, force=True, destroy_storage=False, max_wait=1500)
 
     # Wait for the cluster to stabilize after unit removal
@@ -340,6 +341,7 @@ async def test_primary_shutdown_with_watcher(ops_test: OpsTest, continuous_write
     logger.info(f"Shutting down primary: {original_primary}")
 
     # Shutdown the primary
+    await stop_machine(ops_test, await get_machine_from_unit(ops_test, original_primary))
     await ops_test.model.destroy_unit(
         original_primary, force=True, destroy_storage=False, max_wait=1500
     )
@@ -434,6 +436,7 @@ async def test_watcher_shutdown_no_outage(ops_test: OpsTest, continuous_writes) 
 
     # Remove the watcher
     watcher_unit = ops_test.model.applications[WATCHER_APP_NAME].units[0]
+    await stop_machine(ops_test, await get_machine_from_unit(ops_test, watcher_unit.name))
     await ops_test.model.destroy_unit(watcher_unit.name, force=True, max_wait=300)
 
     # Verify writes continue without interruption
@@ -520,12 +523,13 @@ async def test_primary_network_isolation_with_watcher(
     # Wait for cluster to stabilize with restored network
     # The old primary may take time to rejoin after getting a new IP address,
     # so we use raise_on_error=False and wait longer
-    await ops_test.model.wait_for_idle(
-        apps=[DATABASE_APP_NAME],
-        timeout=900,
-        idle_period=30,
-        raise_on_error=False,  # Old primary may be in error while rejoining
-    )
+    async with ops_test.fast_forward(fast_interval="60s"):
+        await ops_test.model.wait_for_idle(
+            apps=[DATABASE_APP_NAME],
+            timeout=900,
+            idle_period=30,
+            raise_on_error=False,  # Old primary may be in error while rejoining
+        )
 
     # Wait for the old primary to rejoin as replica
     # This can take a while as it needs to recover with a new IP
