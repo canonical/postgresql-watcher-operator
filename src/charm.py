@@ -83,6 +83,7 @@ class _PostgreSQLRefresh(charm_refresh.CharmSpecificMachines):
         self, *, snap_name: str, snap_revision: str, refresh: charm_refresh.Machines
     ) -> None:
         self._charm.set_unit_status(MaintenanceStatus("refreshing the snap"), refresh=refresh)
+        self._charm.watcher_requirer.stop_services()
         self._charm._install_snap_package(revision=snap_revision, refresh=refresh)
 
         self._charm._post_snap_refresh(refresh)
@@ -129,6 +130,7 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
         Called after snap refresh
         """
         install_service()
+        self.watcher_requirer.start_services()
         refresh.next_unit_allowed_to_refresh = True
 
     def set_unit_status(

@@ -279,6 +279,30 @@ class WatcherRequirerHandler(Object):
     def _on_leader_elected(self, _) -> None:
         self._update_unit_address_if_changed()
 
+    def stop_services(self) -> None:
+        """Stop all services."""
+        for relation in self.model.relations.get(WATCHER_RELATION, []):
+            raft_controller = RaftController(self.charm, f"rel{relation.id}")
+            raft_controller.remove_service()
+
+    def start_services(self) -> None:
+        """Start all services."""
+        for relation in self.model.relations.get(WATCHER_RELATION, []):
+            if (raft_password := self._get_raft_password(relation)) and (
+                partner_addrs := self._get_raft_partner_addrs(relation)
+            ):
+                port = self._get_port_for_relation(relation.id)
+
+                raft_controller = RaftController(self.charm, f"rel{relation.id}")
+                raft_controller.configure(
+                    port,
+                    self.unit_ip,
+                    partner_addrs,
+                    raft_password,
+                    self._get_patroni_cas(relation),
+                )
+                raft_controller.restart()
+
     def _update_unit_address_if_changed(self) -> None:
         """Update unit-address in relation data if IP has changed, for ALL relations."""
         if not (new_address := self.unit_ip) or not self.charm.unit.is_leader():
