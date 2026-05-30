@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
+import logging
 from collections.abc import Callable
 
 import jubilant
 from jubilant import Juju
 from jubilant.statustypes import Status, UnitStatus
+from pysyncobj.utility import TcpUtility
 from tenacity import Retrying, stop_after_delay, wait_fixed
+from yaml import safe_load
 
-from constants import PEER
+from constants import PEER, RAFT_PARTNER_PREFIX
 
 from ..helpers import execute_queries_on_unit
 
@@ -138,3 +141,59 @@ def get_user_password(juju: Juju, app_name: str, user: str) -> str | None:
         if secret.label == f"{PEER}.{app_name}.app":
             revealed_secret = juju.show_secret(secret.uri, reveal=True)
             return revealed_secret.content.get(f"{user}-password")
+
+
+def verify_raft_cluster_health(
+    juju: Juju,
+    db_app_name: str,
+    watcher_app_name: str,
+    expected_members: int = 3,
+    check_watcher_ip: bool = True,
+) -> None:
+    """Verify that the Raft cluster has the expected number of members and quorum."""
+    logging.info(f"Verifying Raft cluster health with {expected_members} expected members")
+
+    # Get watcher address for verification using juju exec to avoid cached IPs
+    model_status = juju.status()
+    watcher_unit = next(unit for unit in model_status.apps[watcher_app_name].units)
+    ip_task = juju.exec("unit-get private-address", unit=watcher_unit)
+    assert ip_task.return_code == 0, f"Failed to get watcher address from {watcher_unit}"
+    watcher_ip = ip_task.stdout.strip()
+
+    for attempt in Retrying(stop=stop_after_delay(180), wait=wait_fixed(5), reraise=True):
+        with attempt:
+            for unit in model_status.apps[db_app_name].units:
+                # Get the Raft password from Patroni config using juju exec directly
+                # We need to avoid shell interpretation issues with run_command_on_unit
+                complete_command = (
+                    "cat /var/snap/charmed-postgresql/current/etc/patroni/patroni.yaml"
+                )
+                exec_task = juju.exec(complete_command, unit=unit)
+                assert exec_task.return_code == 0, f"Failed to read patroni.yaml on {unit}"
+
+                conf = safe_load(exec_task.stdout)
+                password = conf.get("raft", {}).get("password")
+                self_addr = conf.get("raft", {}).get("self_addr")
+                assert password, f"Could not find Raft password in patroni.yaml on {unit}"
+
+                # Check Raft status using the password
+                syncobj_util = TcpUtility(password=password, timeout=3)
+                status = syncobj_util.executeCommand(self_addr, ["status"])
+                logging.info(f"Raft status on {unit}: {status}")
+
+                # Verify quorum
+                assert status["has_quorum"] is True, f"Unit {unit} does not have Raft quorum"
+
+                assert status["partner_nodes_count"] + 1 == expected_members
+
+                # Verify watcher is in the cluster (if requested)
+                # After network isolation tests, the watcher may have been redeployed
+                # with a new IP that isn't yet updated in the Raft configuration
+                if check_watcher_ip:
+                    assert watcher_ip in [
+                        key.split(":")[0].split(RAFT_PARTNER_PREFIX)[-1]
+                        for key in status
+                        if key.startswith(RAFT_PARTNER_PREFIX)
+                    ], f"Watcher {watcher_ip} not found in Raft cluster on {unit}"
+
+    logging.info("Raft cluster health verified successfully")

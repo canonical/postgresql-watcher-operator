@@ -16,6 +16,7 @@ from .high_availability_helpers_new import (
     check_db_units_writes_increment,
     get_app_leader,
     get_app_units,
+    verify_raft_cluster_health,
     wait_for_apps_status,
 )
 
@@ -113,12 +114,12 @@ def test_upgrade_from_edge(juju: Juju, charm: str, continuous_writes) -> None:
 
     logging.info("Wait for upgrade to complete")
     juju.wait(
-        ready=wait_for_apps_status(jubilant.all_active, WATCHER_APP_NAME),
-        timeout=20 * MINUTE_SECS,
+        ready=wait_for_apps_status(jubilant.all_active, WATCHER_APP_NAME), timeout=20 * MINUTE_SECS
     )
 
     logging.info("Ensure continuous writes are incrementing")
     check_db_units_writes_increment(juju, DB_APP_NAME)
+    verify_raft_cluster_health(juju, DB_APP_NAME, WATCHER_APP_NAME)
 
 
 def test_fail_and_rollback(juju: Juju, charm: str, continuous_writes) -> None:
@@ -161,6 +162,7 @@ def test_fail_and_rollback(juju: Juju, charm: str, continuous_writes) -> None:
 
     logging.info("Ensure continuous writes after rollback procedure")
     check_db_units_writes_increment(juju, DB_APP_NAME)
+    verify_raft_cluster_health(juju, DB_APP_NAME, WATCHER_APP_NAME)
 
     # Remove fault charm file
     tmp_folder_charm.unlink()

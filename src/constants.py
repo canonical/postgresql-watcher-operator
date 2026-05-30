@@ -7,6 +7,9 @@ API_REQUEST_TIMEOUT = 5
 PATRONI_CLUSTER_STATUS_ENDPOINT = "cluster"
 PEER = "database-peers"
 
+# Snap constants.
+SNAP_COMMON_PATH = "/var/snap/charmed-postgresql/common"
+
 # # Watcher constants
 WATCHER_RELATION = "watcher"
 

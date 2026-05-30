@@ -38,8 +38,10 @@ from ops import (
     UpdateStatusEvent,
     WaitingStatus,
 )
+from single_kernel_postgresql.config.literals import Substrates
+from single_kernel_postgresql.utils import _change_owner
 
-from constants import RAFT_PORT, WATCHER_RELATION
+from constants import RAFT_PORT, SNAP_COMMON_PATH, WATCHER_RELATION
 from raft_controller import RaftController, install_service
 
 if typing.TYPE_CHECKING:
@@ -262,6 +264,7 @@ class WatcherRequirerHandler(Object):
 
         # Install the charmed PostgreSQL snap.
         self.charm._install_snap_package(revision=None)
+        _change_owner(Substrates.VM, SNAP_COMMON_PATH)
         install_service()
 
     def _on_start(self, event: StartEvent) -> None:
