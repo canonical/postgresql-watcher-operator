@@ -19,6 +19,7 @@ from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
     BlockedStatus,
     JujuVersion,
+    MaintenanceStatus,
     Relation,
     SecretRemoveEvent,
     main,
@@ -81,7 +82,10 @@ class _PostgreSQLRefresh(charm_refresh.CharmSpecificMachines):
     def refresh_snap(
         self, *, snap_name: str, snap_revision: str, refresh: charm_refresh.Machines
     ) -> None:
-        pass
+        self._charm.set_unit_status(MaintenanceStatus("refreshing the snap"), refresh=refresh)
+        self._charm._install_snap_package(revision=snap_revision, refresh=refresh)
+
+        self._charm._post_snap_refresh(refresh)
 
 
 class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
