@@ -12,8 +12,9 @@
   packageRules: [
     {
       matchPackageNames: ['postgresql-charms-single-kernel'],
-      schedule: ['at any time'],
+      schedule: ['* * * * *'],
       minimumReleaseAge: '0',
+      groupName: "Single kernel"
     },
   ],
   customManagers: [],
