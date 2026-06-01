@@ -17,15 +17,19 @@ import tomli
 from charmlibs import snap
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
+    ActiveStatus,
     BlockedStatus,
     JujuVersion,
+    MaintenanceStatus,
     Relation,
     SecretRemoveEvent,
     main,
 )
-from single_kernel_postgresql.config.literals import PEER
+from single_kernel_postgresql.config.literals import PEER, Substrates
+from single_kernel_postgresql.utils import _change_owner
 
 from config import CharmConfig
+from constants import SNAP_COMMON_PATH
 from raft_controller import install_service
 from relations.watcher_requirer import WatcherRequirerHandler
 
@@ -81,7 +85,13 @@ class _PostgreSQLRefresh(charm_refresh.CharmSpecificMachines):
     def refresh_snap(
         self, *, snap_name: str, snap_revision: str, refresh: charm_refresh.Machines
     ) -> None:
-        pass
+        self._charm.set_unit_status(MaintenanceStatus("refreshing the snap"), refresh=refresh)
+        self._charm.watcher_requirer.stop_services()
+        # Compatibility with storage refactoring
+        _change_owner(Substrates.VM, SNAP_COMMON_PATH)
+        self._charm._install_snap_package(revision=snap_revision, refresh=refresh)
+
+        self._charm._post_snap_refresh(refresh)
 
 
 class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
@@ -101,6 +111,8 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
         self.watcher_requirer = WatcherRequirerHandler(self)
         # Set tracing_endpoint for @trace_charm decorator compatibility
         self.tracing_endpoint = None
+
+        self.framework.observe(self.on.collect_unit_status, self._reconcile_refresh_status)
 
         self.refresh: charm_refresh.Machines | None
         try:
@@ -125,6 +137,8 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
         Called after snap refresh
         """
         install_service()
+        self.watcher_requirer.start_services()
+        self.set_unit_status(ActiveStatus(), refresh=refresh)
         refresh.next_unit_allowed_to_refresh = True
 
     def set_unit_status(
@@ -147,9 +161,20 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
             return
         self.unit.status = status
 
+    def set_app_status(self) -> None:
+        """Set the app status."""
+        if self.refresh is not None and self.refresh.app_status_higher_priority:
+            self.app.status = self.refresh.app_status_higher_priority
+            return
+        if self._peers is None:
+            return
+        self.app.status = ActiveStatus()
+
     def _reconcile_refresh_status(self, _=None):
         # Workaround for other unit statuses being set in a stateful way (i.e. unable to recompute
         # status on every event)
+        if self.unit.is_leader():
+            self.set_app_status()
         path = pathlib.Path(".last_refresh_unit_status.json")
         try:
             last_refresh_unit_status = json.loads(path.read_text())

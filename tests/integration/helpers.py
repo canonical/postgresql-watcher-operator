@@ -4,12 +4,12 @@
 import itertools
 import json
 import logging
+import subprocess
 from pathlib import Path
 
 import psycopg2
 import requests
 import yaml
-from constants import PEER
 from juju.model import Model
 from pytest_operator.plugin import OpsTest
 from tenacity import (
@@ -17,6 +17,8 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
+
+from constants import PEER
 
 CHARM_BASE = "ubuntu@22.04"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -194,3 +196,45 @@ async def run_command_on_unit(ops_test: OpsTest, unit_name: str, command: str) -
             f"Expected command '{command}' to succeed instead it failed: {return_code}"
         )
     return stdout
+
+
+async def stop_machine(ops_test: OpsTest, machine_name: str) -> None:
+    """Stop the machine where a unit run on.
+
+    Args:
+        ops_test: The ops test framework instance
+        machine_name: The name of the machine to stop
+    """
+    stop_machine_command = f"lxc stop {machine_name}"
+    subprocess.check_call(stop_machine_command.split())
+
+
+### Ported Mysql jubilant helpers
+
+
+def execute_queries_on_unit(
+    unit_address: str, username: str, password: str, queries: list[str], database: str
+) -> list:
+    """Execute given PostgreSQL queries on a unit.
+
+    Args:
+        unit_address: The public IP address of the unit to execute the queries on
+        username: The PostgreSQL username
+        password: The PostgreSQL password
+        queries: A list of queries to execute
+        database: Database to execute in
+
+    Returns:
+        A list of rows that were potentially queried
+    """
+    with (
+        psycopg2.connect(
+            f"dbname='{database}' user='{username}' host='{unit_address}' password='{password}' connect_timeout=10"
+        ) as connection,
+        connection.cursor() as cursor,
+    ):
+        for query in queries:
+            cursor.execute(query)
+        output = list(itertools.chain(*cursor.fetchall()))
+
+    return output
