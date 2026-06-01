@@ -291,8 +291,11 @@ class WatcherRequirerHandler(Object):
     def start_services(self) -> None:
         """Start all services."""
         for relation in self.model.relations.get(WATCHER_RELATION, []):
-            if (raft_password := self._get_raft_password(relation)) and (
-                partner_addrs := self._get_raft_partner_addrs(relation)
+            if (
+                not self._is_disabled(relation)
+                and (raft_password := self._get_raft_password(relation))
+                and (partner_addrs := self._get_raft_partner_addrs(relation))
+                and self._should_watcher_vote(partner_addrs)
             ):
                 port = self._get_port_for_relation(relation.id)
 
