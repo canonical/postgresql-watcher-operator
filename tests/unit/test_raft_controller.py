@@ -38,6 +38,10 @@ def test_configure(tmp_path: Path, controller: RaftController):
     with (
         patch("raft_controller.render_file") as _render_file,
         patch("raft_controller.create_directory") as _create_directory,
+        patch("raft_controller.RaftController.restart") as _restart,
+        patch(
+            "raft_controller.RaftController.check_watcher_connection"
+        ) as _check_watcher_connection,
     ):
         assert controller.configure(2222, "10.0.0.1", ["10.0.0.2"], "secret")
 
@@ -52,6 +56,8 @@ def test_configure(tmp_path: Path, controller: RaftController):
             expected_content,
             0o600,
         )
+        _restart.assert_called_once_with()
+        _check_watcher_connection.assert_called_once_with("10.0.0.1:2222", "secret", ["10.0.0.2"])
 
 
 def test_remove_service_disables_unit_and_deletes_dir(tmp_path: Path, controller: RaftController):

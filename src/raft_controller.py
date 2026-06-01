@@ -184,6 +184,8 @@ class RaftController:
             render_file(Substrates.VM, self.ca_file, cas, 0o600)
 
         logger.info(f"Raft controller configured: self={self_addr}, partners={partner_addrs}")
+        self.restart()
+        self.check_watcher_connection(f"{self_addr}:{self_port}", password, partner_addrs)
         return True
 
     def check_watcher_connection(

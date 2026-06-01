@@ -307,7 +307,6 @@ class WatcherRequirerHandler(Object):
                     raft_password,
                     self._get_patroni_cas(relation),
                 )
-                raft_controller.restart()
 
     def _update_unit_address_if_changed(self) -> None:
         """Update unit-address in relation data if IP has changed, for ALL relations."""
@@ -337,27 +336,21 @@ class WatcherRequirerHandler(Object):
 
             if (
                 address_changed
+                and not self._is_disabled(relation)
                 and (raft_password := self._get_raft_password(relation))
                 and (partner_addrs := self._get_raft_partner_addrs(relation))
+                and self._should_watcher_vote(partner_addrs)
             ):
                 port = self._get_port_for_relation(relation.id)
                 watcher_addr = f"{new_address}:{port}"
                 raft_controller = RaftController(self.charm, f"rel{relation.id}")
-                changed = raft_controller.configure(
+                raft_controller.configure(
                     port,
                     new_address,
                     partner_addrs,
                     raft_password,
                     self._get_patroni_cas(relation),
                 )
-                if changed and service_running(raft_controller.service_name):
-                    logger.info(
-                        f"Restarting Raft controller for relation {relation.id} due to IP change"
-                    )
-                    raft_controller.restart()
-                    raft_controller.check_watcher_connection(
-                        watcher_addr, raft_password, partner_addrs
-                    )
                 raft_controller.cleanup_raft_cluster(watcher_addr, raft_password, partner_addrs)
         self.charm.app_peer_data["unit-address"] = new_address
 
@@ -518,17 +511,9 @@ class WatcherRequirerHandler(Object):
                 relation.data[self.charm.app]["raft-status"] = "disabled"
                 return
 
-            if raft_controller.configure(
+            raft_controller.configure(
                 port, unit_ip, partner_addrs, raft_password, self._get_patroni_cas(relation)
-            ):
-                logger.info(
-                    f"Restarting Raft controller for relation {relation.id} to apply config changes"
-                )
-                raft_controller.restart()
-                raft_controller.check_watcher_connection(
-                    watcher_addr, raft_password, partner_addrs
-                )
-
+            )
             relation.data[self.charm.unit]["unit-address"] = unit_ip
             relation.data[self.charm.app]["watcher-raft-port"] = str(port)
             if unit_az := os.environ.get("JUJU_AVAILABILITY_ZONE"):
