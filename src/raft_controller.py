@@ -4,8 +4,8 @@
 """Raft controller management for PostgreSQL watcher.
 
 This module manages a Patroni raft_controller node that participates in
-consensus without running PostgreSQL, providing the necessary third vote
-for quorum in 2-node PostgreSQL clusters.
+consensus without running PostgreSQL, providing the extra vote that keeps
+quorum odd in even-sized (2, 4, 6, ...) PostgreSQL clusters.
 
 Uses Patroni's own ``patroni_raft_controller`` from the charmed-postgresql
 snap, which is the same battle-tested Raft implementation used by the

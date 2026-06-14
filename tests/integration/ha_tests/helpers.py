@@ -9,6 +9,7 @@ import psycopg2
 import requests
 import yaml
 from juju.model import Model
+from pysyncobj.utility import TcpUtility
 from pytest_operator.plugin import OpsTest
 from tenacity import (
     RetryError,
@@ -18,6 +19,8 @@ from tenacity import (
     stop_after_delay,
     wait_fixed,
 )
+
+from constants import RAFT_PARTNER_PREFIX
 
 from ..helpers import (
     APPLICATION_NAME,
@@ -419,3 +422,107 @@ async def wait_network_restore(ops_test: OpsTest, unit_name: str, old_ip: str) -
     # Juju status too quickly.
     if (await get_ip_from_inside_the_unit(ops_test, unit_name)) == old_ip:
         raise Exception
+
+
+async def start_writes(ops_test: OpsTest) -> None:
+    """Start continuous writes to PostgreSQL (assumes relation already exists)."""
+    for attempt in Retrying(stop=stop_after_delay(60 * 5), wait=wait_fixed(3), reraise=True):
+        with attempt:
+            action = (
+                await ops_test.model
+                .applications[APPLICATION_NAME]
+                .units[0]
+                .run_action("start-continuous-writes")
+            )
+            await action.wait()
+            assert action.results["result"] == "True", "Unable to create continuous_writes table"
+
+
+async def verify_raft_cluster_health(
+    ops_test: OpsTest,
+    db_app_name: str,
+    watcher_app_name: str,
+    expected_members: int = 3,
+    check_watcher_ip: bool = True,
+    expect_watcher_absent: bool = False,
+) -> None:
+    """Verify that the Raft cluster has the expected number of members and quorum.
+
+    This function checks that all PostgreSQL units see the expected number of
+    Raft members (including the watcher) and have quorum. This is critical
+    after watcher re-deployment to ensure the cluster is properly formed.
+
+    Args:
+        ops_test: The OpsTest instance.
+        db_app_name: The PostgreSQL application name.
+        watcher_app_name: The watcher application name.
+        expected_members: Expected number of Raft members (default 3 for stereo mode).
+        check_watcher_ip: Whether to verify the watcher IP in Raft status (default True).
+            Set to False after network isolation tests where watcher may have been
+            redeployed with a new IP that isn't yet in the Raft configuration.
+        expect_watcher_absent: When True, assert that the watcher IP is NOT a Raft
+            member (the watcher stood down, e.g. with an odd number of PostgreSQL
+            units). Takes precedence over check_watcher_ip.
+
+    Raises:
+        AssertionError: If the Raft cluster is not healthy.
+    """
+    logger.info(f"Verifying Raft cluster health with {expected_members} expected members")
+
+    # Get watcher address for verification using juju exec to avoid cached IPs
+    watcher_unit = ops_test.model.applications[watcher_app_name].units[0]
+    return_code, watcher_ip, _ = await ops_test.juju(
+        "exec", "--unit", watcher_unit.name, "--", "unit-get", "private-address"
+    )
+    assert return_code == 0, f"Failed to get watcher address from {watcher_unit.name}"
+    watcher_ip = watcher_ip.strip()
+
+    for attempt in Retrying(stop=stop_after_delay(180), wait=wait_fixed(5), reraise=True):
+        with attempt:
+            for unit in ops_test.model.applications[db_app_name].units:
+                # Get the Raft password from Patroni config using juju exec directly
+                # We need to avoid shell interpretation issues with run_command_on_unit
+                complete_command = [
+                    "exec",
+                    "--unit",
+                    unit.name,
+                    "--",
+                    "cat",
+                    "/var/snap/charmed-postgresql/current/etc/patroni/patroni.yaml",
+                ]
+                return_code, stdout, _ = await ops_test.juju(*complete_command)
+                assert return_code == 0, f"Failed to read patroni.yaml on {unit.name}"
+
+                conf = yaml.safe_load(stdout)
+                password = conf.get("raft", {}).get("password")
+                self_addr = conf.get("raft", {}).get("self_addr")
+                assert password, f"Could not find Raft password in patroni.yaml on {unit.name}"
+
+                # Check Raft status using the password
+                syncobj_util = TcpUtility(password=password, timeout=3)
+                status = syncobj_util.executeCommand(self_addr, ["status"])
+                logger.info(f"Raft status on {unit.name}: {status}")
+
+                # Verify quorum
+                assert status["has_quorum"] is True, f"Unit {unit.name} does not have Raft quorum"
+
+                assert status["partner_nodes_count"] + 1 == expected_members
+
+                member_ips = [
+                    key.split(":")[0].split(RAFT_PARTNER_PREFIX)[-1]
+                    for key in status
+                    if key.startswith(RAFT_PARTNER_PREFIX)
+                ]
+                if expect_watcher_absent:
+                    assert watcher_ip not in member_ips, (
+                        f"Watcher {watcher_ip} still in Raft cluster on {unit.name}"
+                    )
+                elif check_watcher_ip:
+                    # Verify watcher is in the cluster (if requested)
+                    # After network isolation tests, the watcher may have been redeployed
+                    # with a new IP that isn't yet updated in the Raft configuration
+                    assert watcher_ip in member_ips, (
+                        f"Watcher {watcher_ip} not found in Raft cluster on {unit.name}"
+                    )
+
+    logger.info("Raft cluster health verified successfully")
