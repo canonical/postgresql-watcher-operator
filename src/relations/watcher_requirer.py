@@ -38,7 +38,7 @@ from ops import (
     UpdateStatusEvent,
     WaitingStatus,
 )
-from single_kernel_postgresql.config.literals import Substrates
+from single_kernel_postgresql.config.enums import Substrates
 from single_kernel_postgresql.utils import _change_owner
 
 from constants import RAFT_PORT, SNAP_COMMON_PATH, WATCHER_RELATION

@@ -34,7 +34,7 @@ from charmlibs.systemd import (
 )
 from jinja2 import Template
 from pysyncobj.utility import TcpUtility
-from single_kernel_postgresql.config.literals import Substrates
+from single_kernel_postgresql.config.enums import Substrates
 from single_kernel_postgresql.utils import (
     create_directory,
     parallel_patroni_get_request,

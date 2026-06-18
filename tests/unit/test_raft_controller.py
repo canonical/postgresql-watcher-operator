@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from jinja2 import Template
 from pytest import fixture
-from single_kernel_postgresql.config.literals import Substrates
+from single_kernel_postgresql.config.enums import Substrates
 from tenacity import stop_after_delay, wait_fixed
 
 from constants import RAFT_PARTNER_PREFIX

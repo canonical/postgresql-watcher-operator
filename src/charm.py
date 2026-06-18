@@ -25,11 +25,11 @@ from ops import (
     SecretRemoveEvent,
     main,
 )
-from single_kernel_postgresql.config.literals import PEER, Substrates
+from single_kernel_postgresql.config.enums import Substrates
 from single_kernel_postgresql.utils import _change_owner
 
 from config import CharmConfig
-from constants import SNAP_COMMON_PATH
+from constants import PEER, SNAP_COMMON_PATH
 from raft_controller import install_service
 from relations.watcher_requirer import WatcherRequirerHandler
 
