@@ -3,8 +3,6 @@
 
 """File containing constants to be used in the charm."""
 
-PEER = "database-peers"
-
 # Snap constants.
 SNAP_COMMON_PATH = "/var/snap/charmed-postgresql/common"
 

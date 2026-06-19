@@ -26,10 +26,11 @@ from ops import (
     main,
 )
 from single_kernel_postgresql.config.enums import Substrates
+from single_kernel_postgresql.config.literals import PEER_RELATION
 from single_kernel_postgresql.utils import _change_owner
 
 from config import CharmConfig
-from constants import PEER, SNAP_COMMON_PATH
+from constants import SNAP_COMMON_PATH
 from raft_controller import install_service
 from relations.watcher_requirer import WatcherRequirerHandler
 
@@ -285,7 +286,7 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
              A:class:`ops.model.Relation` object representing
              the peer relation.
         """
-        return self.model.get_relation(PEER)
+        return self.model.get_relation(PEER_RELATION)
 
 
 if __name__ == "__main__":

@@ -8,10 +8,11 @@ import jubilant
 from jubilant import Juju
 from jubilant.statustypes import Status, UnitStatus
 from pysyncobj.utility import TcpUtility
+from single_kernel_postgresql.config.literals import PEER_RELATION
 from tenacity import Retrying, stop_after_delay, wait_fixed
 from yaml import safe_load
 
-from constants import PEER, RAFT_PARTNER_PREFIX
+from constants import RAFT_PARTNER_PREFIX
 
 from ..helpers import execute_queries_on_unit
 
@@ -138,7 +139,7 @@ def wait_for_apps_status(jubilant_status_func: JujuAppsStatusFn, *apps: str) -> 
 def get_user_password(juju: Juju, app_name: str, user: str) -> str | None:
     """Get a system user's password."""
     for secret in juju.secrets():
-        if secret.label == f"{PEER}.{app_name}.app":
+        if secret.label == f"{PEER_RELATION}.{app_name}.app":
             revealed_secret = juju.show_secret(secret.uri, reveal=True)
             return revealed_secret.content.get(f"{user}-password")
 
