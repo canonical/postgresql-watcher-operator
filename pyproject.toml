@@ -56,7 +56,7 @@ optional = true
 [tool.poetry.group.integration.dependencies]
 # Imported without the "postgresql" extra: integration tests only use the lib's
 # config.literals (e.g. PEER_RELATION), which is pure-stdlib. The extra would pull
-# psycopg2 (source) -> needs pg_config and fails on arm64 runners. psycopg2-binary
+# psycopg2 (source), which must be compiled (it needs pg_config); psycopg2-binary
 # below already provides the psycopg2 module the tests import.
 postgresql-charms-single-kernel = "16.3.0"
 pytest = "^9.1.1"
