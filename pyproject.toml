@@ -20,11 +20,20 @@ charmlibs-snap = "^1.0.1"
 charmlibs-systemd = "^1.0.0"
 
 [tool.poetry.group.single-kernel.dependencies]
-postgresql-charms-single-kernel = {extras = ["postgresql"], version = "16.3.0"}
+postgresql-charms-single-kernel = "16.3.0"
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_models.py
 pydantic = "*"
+# single-kernel is pinned bare (no extra) in the single-kernel group, so the
+# charm build declares the lib's "postgresql"-extra runtime deps that aren't
+# already in main (see the library's optional-dependencies for the full set).
+httpx = "*"
+data-platform-helpers = ">=0.1.7"
+charmlibs-pathops = ">=1.0.1"
+charmlibs-interfaces-tls-certificates = ">=1.8.3"
+charmlibs-rollingops = ">=1.1.1"
+tomli = "^2.4.1"
 
 [tool.poetry.group.format]
 optional = true
@@ -54,11 +63,10 @@ tomli-w = "^1.2.0"
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-# Imported without the "postgresql" extra: integration tests only use the lib's
-# config.literals (e.g. PEER_RELATION), which is pure-stdlib. The extra would pull
-# psycopg2 (source), which must be compiled (it needs pg_config); psycopg2-binary
-# below already provides the psycopg2 module the tests import.
-postgresql-charms-single-kernel = "16.3.0"
+# single-kernel itself (bare, no extra) is installed via the shared single-kernel
+# group (see tox.ini); the tests only import its pure-stdlib config.literals.
+# psycopg2-binary provides the psycopg2 module the tests import without building
+# the source psycopg2 the lib's postgresql extra would pull in.
 pytest = "^9.1.1"
 pytest-operator = "^0.43.2"
 # renovate caret doesn't work: https://github.com/renovatebot/renovate/issues/26940
