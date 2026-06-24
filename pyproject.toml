@@ -30,21 +30,21 @@ pydantic = "*"
 optional = true
 
 [tool.poetry.group.format.dependencies]
-ruff = "^0.15.17"
+ruff = "^0.15.18"
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
 codespell = "^2.4.2"
-ty = "^0.0.49"
+ty = "^0.0.52"
 
 [tool.poetry.group.unit]
 optional = true
 
 [tool.poetry.group.unit.dependencies]
-coverage = { extras = ["toml"], version = "^7.14.1" }
-pytest = "^9.1.0"
+coverage = { extras = ["toml"], version = "^7.14.3" }
+pytest = "^9.1.1"
 pytest-asyncio = "*"
 parameterized = "^0.9.0"
 jsonschema = "^4.26.0"
@@ -59,7 +59,7 @@ optional = true
 # psycopg2 (source) -> needs pg_config and fails on arm64 runners. psycopg2-binary
 # below already provides the psycopg2 module the tests import.
 postgresql-charms-single-kernel = "16.3.0"
-pytest = "^9.1.0"
+pytest = "^9.1.1"
 pytest-operator = "^0.43.2"
 # renovate caret doesn't work: https://github.com/renovatebot/renovate/issues/26940
 juju = "<=3.6.1.3"
