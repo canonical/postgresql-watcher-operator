@@ -38,19 +38,17 @@ from ops import (
     UpdateStatusEvent,
     WaitingStatus,
 )
-from single_kernel_postgresql.config.literals import Substrates
+from single_kernel_postgresql.config.enums import Substrates
+from single_kernel_postgresql.config.literals import WATCHER_RELATION
 from single_kernel_postgresql.utils import _change_owner
 
-from constants import RAFT_PORT, SNAP_COMMON_PATH, WATCHER_RELATION
+from constants import RAFT_PORT, SNAP_COMMON_PATH
 from raft_controller import RaftController, install_service
 
 if typing.TYPE_CHECKING:
     from charm import PostgresqlWatcherCharm
 
 logger = logging.getLogger(__name__)
-
-SNAP_NAME = "charmed-postgresql"
-SNAP_CHANNEL = "16/edge"
 
 
 class WatcherRequirerHandler(Object):

@@ -12,13 +12,12 @@ import requests
 import yaml
 from juju.model import Model
 from pytest_operator.plugin import OpsTest
+from single_kernel_postgresql.config.literals import PEER_RELATION
 from tenacity import (
     retry,
     stop_after_attempt,
     wait_exponential,
 )
-
-from constants import PEER
 
 CHARM_BASE = "ubuntu@22.04"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -120,7 +119,7 @@ async def get_password(
     Returns:
         the user password.
     """
-    secret = await get_secret_by_label(ops_test, label=f"{PEER}.{database_app_name}.app")
+    secret = await get_secret_by_label(ops_test, label=f"{PEER_RELATION}.{database_app_name}.app")
     password = secret.get(f"{username}-password")
 
     return password

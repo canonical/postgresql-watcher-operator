@@ -34,7 +34,8 @@ from charmlibs.systemd import (
 )
 from jinja2 import Template
 from pysyncobj.utility import TcpUtility
-from single_kernel_postgresql.config.literals import Substrates
+from single_kernel_postgresql.config.enums import Substrates
+from single_kernel_postgresql.config.literals import PATRONI_CLUSTER_STATUS_ENDPOINT
 from single_kernel_postgresql.utils import (
     create_directory,
     parallel_patroni_get_request,
@@ -43,7 +44,7 @@ from single_kernel_postgresql.utils import (
 from tenacity import RetryError, Retrying, stop_after_attempt, wait_fixed
 
 from cluster import ClusterMember
-from constants import PATRONI_CLUSTER_STATUS_ENDPOINT, RAFT_PARTNER_PREFIX, RAFT_PORT
+from constants import RAFT_PARTNER_PREFIX, RAFT_PORT
 
 if TYPE_CHECKING:
     from charm import PostgresqlWatcherCharm
