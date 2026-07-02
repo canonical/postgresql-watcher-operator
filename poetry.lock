@@ -1565,7 +1565,7 @@ version = "1.43.0"
 description = "OpenTelemetry Python API"
 optional = false
 python-versions = ">=3.10"
-groups = ["main", "charm-libs"]
+groups = ["main", "charm-libs", "integration"]
 files = [
     {file = "opentelemetry_api-1.43.0-py3-none-any.whl", hash = "sha256:20acf45e9b21851926835292e4045d290acade1edd2ff3de86d2f069687ba1fd"},
     {file = "opentelemetry_api-1.43.0.tar.gz", hash = "sha256:107d0d03857ea8fc7c5fcbbbd83f800c281f0d560553d61c1d675fccfd1761c1"},
@@ -1580,7 +1580,7 @@ version = "3.8.0"
 description = "The Python library behind great charms"
 optional = false
 python-versions = ">=3.10"
-groups = ["main", "charm-libs"]
+groups = ["main", "charm-libs", "integration"]
 files = [
     {file = "ops-3.8.0-py3-none-any.whl", hash = "sha256:03f788091b10c5ed37a0a290e814b1a90aa0dcec6006a87875a085072df2261d"},
     {file = "ops-3.8.0.tar.gz", hash = "sha256:bdbf4bbcd0622acade9ef0b156ddefc31be59f0ef55d563081a094cf7dd6665c"},
@@ -1706,7 +1706,7 @@ version = "16.3.1"
 description = "Shared and reusable code for PostgreSQL-related charms"
 optional = false
 python-versions = "<4.0,>=3.8"
-groups = ["main"]
+groups = ["main", "integration"]
 files = [
     {file = "postgresql_charms_single_kernel-16.3.1-py3-none-any.whl", hash = "sha256:a1c3f32fb396e69421471d64f54a43968f134fe5538708fabe37139a9fae832e"},
     {file = "postgresql_charms_single_kernel-16.3.1.tar.gz", hash = "sha256:48e028e873b00c877fd36a25ff6c1913a40d559cb4124aae888edd1262cdce3a"},
@@ -2985,4 +2985,4 @@ h11 = ">=0.16.0,<1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "d439f1bb3402fde316c99272c66b51f76cd1ba50d03ad3981c708fb7d93c89d2"
+content-hash = "bfe56cca43092fc623111b5e4bfec8198d0de87a57f7db15c81c6da3e6a44965"
