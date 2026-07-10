@@ -18,7 +18,7 @@ pysyncobj = "^0.3.15"
 charm-refresh = "^3.1.0.2"
 charmlibs-snap = "^1.0.1"
 charmlibs-systemd = "^1.0.0"
-postgresql-charms-single-kernel = "16.3.2"
+postgresql-charms-single-kernel = "16.3.3"
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_models.py
