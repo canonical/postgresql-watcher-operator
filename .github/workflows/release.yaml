@@ -28,7 +28,7 @@ jobs:
     name: Tests
     needs:
       - tag
-    uses: ./.github/workflows/ci.yaml
+    uses: $/.github/workflows/ci.yaml
     permissions:
       contents: write  # Needed for Allure Report
 
