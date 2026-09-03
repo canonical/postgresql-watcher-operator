@@ -57,19 +57,19 @@ resume-refresh:
         If first unit to refresh is unhealthy because compatibility checks, pre-refresh checks, or workload container checks are failing, this parameter is more destructive than the `force-refresh-start` action.
   additionalProperties: false
   get-cluster-status:
-  description: Display cluster topology, PostgreSQL units health status, and Raft cluster state.
-    Only available when role=watcher.
-  params:
-    cluster-name:
-      type: string
-      description: |
-        The name of the cluster to filter the output by.
-        Useful in async-replication (Disaster Recovery) setups where multiple clusters are related.
-    standby-clusters:
-      type: boolean
-      default: false
-      description: |
-        Show status information including linked standby clusters (async replication).
-trigger-health-check:
-  description: Manually trigger health checks on PostgreSQL endpoints and return results.
-    Only available when role=watcher.
+    description: Display cluster topology, PostgreSQL units health status, and Raft cluster state.
+      Only available when role=watcher.
+    params:
+      cluster-name:
+        type: string
+        description: |
+          The name of the cluster to filter the output by.
+          Useful in async-replication (Disaster Recovery) setups where multiple clusters are related.
+      standby-clusters:
+        type: boolean
+        default: false
+        description: |
+          Show status information including linked standby clusters (async replication).
+  trigger-health-check:
+    description: Manually trigger health checks on PostgreSQL endpoints and return results.
+      Only available when role=watcher.

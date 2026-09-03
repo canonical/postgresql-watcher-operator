@@ -210,10 +210,12 @@ async def test_deploy_stereo_mode_with_spaces(ops_test: OpsTest, charm, spaced_m
         # Deploy PostgreSQL: peers + database on pg-space, watcher relation on watcher-space
         logger.info("Deploying PostgreSQL with pg-space + watcher-space...")
         await ops_test.model.deploy(
-            charm,
+            DATABASE_APP_NAME,
             application_name=DATABASE_APP_NAME,
             num_units=2,
             base=CHARM_BASE,
+            series="noble",
+            channel="16/edge",
             config={"profile": "testing"},
             constraints={"spaces": ["pg-space", "watcher-space"]},
             bind={
