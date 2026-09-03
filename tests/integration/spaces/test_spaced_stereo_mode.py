@@ -218,11 +218,7 @@ async def test_deploy_stereo_mode_with_spaces(ops_test: OpsTest, charm, spaced_m
             channel="16/edge",
             config={"profile": "testing"},
             constraints={"spaces": ["pg-space", "watcher-space"]},
-            bind={
-                "database-peers": "pg-space",
-                "database": "pg-space",
-                "watcher-offer": "watcher-space",
-            },
+            bind={"database-peers": "pg-space", "database": "pg-space"},
         )
 
         # Deploy watcher: all traffic on watcher-space
@@ -232,9 +228,9 @@ async def test_deploy_stereo_mode_with_spaces(ops_test: OpsTest, charm, spaced_m
             application_name=WATCHER_APP_NAME,
             num_units=1,
             base=CHARM_BASE,
-            config={"role": "watcher", "profile": "testing"},
-            constraints={"spaces": ["watcher-space"]},
+            config={"profile": "testing"},
             bind={"watcher": "watcher-space"},
+            constraints={"spaces": ["watcher-space"]},
         )
 
         # Deploy test app in pg-space
@@ -242,7 +238,6 @@ async def test_deploy_stereo_mode_with_spaces(ops_test: OpsTest, charm, spaced_m
         await ops_test.model.deploy(
             APPLICATION_NAME,
             application_name=APPLICATION_NAME,
-            base=CHARM_BASE,
             channel="edge",
             constraints={"spaces": ["pg-space"]},
             bind={"database": "pg-space"},
