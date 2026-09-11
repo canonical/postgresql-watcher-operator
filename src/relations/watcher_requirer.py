@@ -10,7 +10,7 @@ Raft consensus as a lightweight witness for stereo mode (2-node clusters).
 
 Multi-cluster support:
 - Each watcher relation gets its own RaftController instance
-- Ports are assigned dynamically starting from RAFT_PORT (2223) and persisted
+- Ports are assigned dynamically starting from RAFT_PORT (2222) and persisted
   in a port allocation file at /var/snap/charmed-postgresql/common/watcher-raft/ports.json
 - Each RaftController uses instance-specific data directories and systemd services
 """
