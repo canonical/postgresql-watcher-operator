@@ -20,6 +20,8 @@ import logging
 import os
 import typing
 from datetime import datetime
+import errno
+import socket
 
 from charmlibs.systemd import service_running
 from ops import (
@@ -118,6 +120,18 @@ class WatcherRequirerHandler(Object):
             return False
         return "disable-watcher" in relation.data[relation.app]
 
+    def port_in_use(self, port: int) -> bool:
+        """Return True if port is already in use by another process"""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind((self.unit_ip, port))
+            except OSError as e:
+                if e.errno in (errno.EADDRINUSE, errno.EACCES):
+                    return True
+                raise
+        return False
+
     def _get_port_for_relation(self, relation_id: int) -> int:
         """Get or assign a port for a given relation ID.
 
@@ -136,7 +150,7 @@ class WatcherRequirerHandler(Object):
         # Assign next available port starting from RAFT_PORT
         used_ports = set(allocations.values())
         port = RAFT_PORT
-        while port in used_ports:
+        while port in used_ports or self.port_in_use(port):
             port += 1
 
         allocations[key] = port
