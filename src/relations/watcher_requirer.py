@@ -121,26 +121,14 @@ class WatcherRequirerHandler(Object):
         return "disable-watcher" in relation.data[relation.app]
 
     def port_in_use(self, port: int) -> bool:
-        """Return True if port is already in use by another process.
-
-        If IP address isn't valid, assume we are either testing or
-        unit has no address yet.
-        """
+        """Return True if the port is already taken on this machine."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
-                sock.bind((self.unit_ip, port))
-            except socket.gaierror:
-                logger.warning("Cannot resolve %s, skipping probe for port %s", self.unit_ip, port)
-                return False
+                sock.bind(("", port))
             except OSError as e:
                 if e.errno in (errno.EADDRINUSE, errno.EACCES):
                     return True
-                if e.errno == errno.EADDRNOTAVAIL:
-                    logger.warning("%s is not a local address, skipping probe", self.unit_ip)
-                    return False
                 raise
-
         return False
 
     def _get_port_for_relation(self, relation_id: int) -> int:

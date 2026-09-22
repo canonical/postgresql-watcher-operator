@@ -1,12 +1,15 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Unit tests for the watcher requirer relation handler (AZ co-location logic)."""
+"""Unit tests for the watcher requirer relation handler (AZ co-location, port allocation)."""
 
+import json
+import socket
 from unittest.mock import MagicMock, patch
 
 from ops import ActiveStatus, BlockedStatus, WaitingStatus
 
+from constants import RAFT_PORT
 from src.relations.watcher_requirer import WatcherRequirerHandler
 
 
@@ -308,3 +311,56 @@ class TestWatcherRelationLifecycle:
 
             _remove_service.assert_called_once_with()
             handler._release_port_for_relation.assert_called_once_with(42)
+
+
+class TestPortAllocation:
+    """Tests for port assignment when ports are taken by another process."""
+
+    def _handler(self, allocations=None):
+        """Create a handler whose peer data is a plain dict."""
+        mock_charm = create_mock_charm()
+        mock_charm.app_peer_data = {"port-allocations": json.dumps(allocations or {})}
+        with patch.object(WatcherRequirerHandler, "__init__", return_value=None):
+            handler = WatcherRequirerHandler.__new__(WatcherRequirerHandler)
+        handler.charm = mock_charm
+        return handler
+
+    def test_port_in_use_when_bound_by_another_process(self):
+        """A port with a listening socket on it is reported as in use."""
+        handler = self._handler()
+        with socket.socket() as other:
+            other.bind(("127.0.0.1", 0))
+            other.listen(1)
+            with patch.object(WatcherRequirerHandler, "unit_ip", "127.0.0.1"):
+                assert handler.port_in_use(other.getsockname()[1]) is True
+
+    def test_port_not_in_use_when_free(self):
+        """A port nobody is bound to is reported as free."""
+        handler = self._handler()
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            free = probe.getsockname()[1]
+        with patch.object(WatcherRequirerHandler, "unit_ip", "127.0.0.1"):
+            assert handler.port_in_use(free) is False
+
+    def test_assigns_first_free_port(self):
+        """Ports held by another process are skipped and the assignment is persisted."""
+        handler = self._handler()
+        with patch.object(WatcherRequirerHandler, "port_in_use", side_effect=[True, True, False]):
+            assert handler._get_port_for_relation(7) == RAFT_PORT + 2
+
+        assert handler.charm.app_peer_data["port-allocations"] == json.dumps({"7": RAFT_PORT + 2})
+
+    def test_skips_ports_allocated_to_other_relations(self):
+        """Ports already allocated to other relations are never reused."""
+        handler = self._handler({"1": RAFT_PORT, "2": RAFT_PORT + 1})
+        with patch.object(WatcherRequirerHandler, "port_in_use", return_value=False):
+            assert handler._get_port_for_relation(3) == RAFT_PORT + 2
+
+    def test_reuses_existing_allocation_without_probing(self):
+        """An already allocated relation keeps its port, without probing it again."""
+        handler = self._handler({"7": RAFT_PORT + 5})
+        with patch.object(WatcherRequirerHandler, "port_in_use", return_value=True) as port_in_use:
+            assert handler._get_port_for_relation(7) == RAFT_PORT + 5
+
+        port_in_use.assert_not_called()
