@@ -124,7 +124,10 @@ class WatcherRequirerHandler(Object):
         """Return True if the port is already taken on this machine."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             try:
-                sock.bind(("", port))
+                # Availability probe only: the socket never listens and is closed
+                # immediately, so nothing is exposed. The Raft controller itself
+                # binds to the unit address, not to all interfaces.
+                sock.bind(("", port)) # noqa: S104
             except OSError as e:
                 if e.errno in (errno.EADDRINUSE, errno.EACCES):
                     return True
