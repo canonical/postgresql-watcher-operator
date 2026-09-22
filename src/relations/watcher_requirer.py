@@ -127,7 +127,7 @@ class WatcherRequirerHandler(Object):
                 # Availability probe only: the socket never listens and is closed
                 # immediately, so nothing is exposed. The Raft controller itself
                 # binds to the unit address, not to all interfaces.
-                sock.bind(("", port)) # noqa: S104
+                sock.bind(("", port))
             except OSError as e:
                 if e.errno in (errno.EADDRINUSE, errno.EACCES):
                     return True
