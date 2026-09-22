@@ -22,6 +22,7 @@ from ipaddress import ip_address
 from shutil import rmtree
 from typing import TYPE_CHECKING, TypedDict
 
+import charm_refresh
 import psycopg2
 from charmlibs.systemd import (
     SystemdError,
@@ -45,6 +46,7 @@ from single_kernel_postgresql.utils import (
 from tenacity import RetryError, Retrying, stop_after_attempt, wait_fixed
 
 from constants import RAFT_PARTNER_PREFIX, RAFT_PORT
+from oom import ensure_snap_oom_protection
 
 if TYPE_CHECKING:
     from charm import PostgresqlWatcherCharm
@@ -80,15 +82,12 @@ class ClusterStatus(TypedDict):
 
 
 def install_service() -> None:
-    """Install the systemd template service for the Raft controller.
-
-    Returns:
-        True if the service file was updated, False if unchanged.
-    """
+    """Install the systemd template service for the Raft controller."""
+    oom_score_adjust = ensure_snap_oom_protection(charm_refresh.snap_name())
     with open("templates/watcher.service.j2") as file:
         template = Template(file.read())
 
-    rendered = template.render(config_file=RAFT_BASE_DIR)
+    rendered = template.render(config_file=RAFT_BASE_DIR, oom_score_adjust=oom_score_adjust)
     render_file(Substrates.VM, SERVICE_FILE, rendered, 0o644, change_owner=False)
 
     # Reload systemd to pick up the new service

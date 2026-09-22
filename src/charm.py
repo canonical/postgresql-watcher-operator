@@ -31,6 +31,7 @@ from single_kernel_postgresql.utils import _change_owner
 
 from config import CharmConfig
 from constants import SNAP_COMMON_PATH
+from oom import ensure_snap_oom_protection
 from raft_controller import install_service
 from relations.watcher_requirer import WatcherRequirerHandler
 
@@ -263,6 +264,7 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
                 logger.error("Unavailable snap architecture %s", platform.machine())
                 raise
         try:
+            ensure_snap_oom_protection(charm_refresh.snap_name())
             snap_cache = snap.SnapCache()
             snap_package = snap_cache[charm_refresh.snap_name()]
             if not snap_package.present or refresh is not None:
