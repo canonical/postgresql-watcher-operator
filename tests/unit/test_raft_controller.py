@@ -4,8 +4,9 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from charmlibs import snap
 from jinja2 import Template
-from pytest import fixture
+from pytest import fixture, mark, raises
 from single_kernel_postgresql.config.enums import Substrates
 from tenacity import stop_after_delay, wait_fixed
 
@@ -76,21 +77,24 @@ def test_remove_service_disables_unit_and_deletes_dir(tmp_path: Path, controller
         _rmtree.assert_called_once_with(controller.data_dir)
 
 
-def test_install_service_uses_patroni_profile_execstart(
-    tmp_path: Path, controller: RaftController
-):
+@mark.parametrize("adjustment", [-899, -898, -875])
+def test_install_service_uses_patroni_profile_execstart(adjustment):
     with open("templates/watcher.service.j2") as file:
         contents = file.read()
         template = Template(contents)
 
     expected_content = template.render(
-        config_file="/var/snap/charmed-postgresql/common/watcher-raft"
+        config_file="/var/snap/charmed-postgresql/common/watcher-raft",
+        oom_score_adjust=adjustment,
     )
 
     with (
         patch("raft_controller.daemon_reload") as _daemon_reload,
         patch("raft_controller.render_file") as _render_file,
         patch("raft_controller.create_directory"),
+        patch("raft_controller.ensure_snap_oom_protection", return_value=adjustment) as protect,
+        patch("raft_controller.service_restart") as restart,
+        patch("raft_controller.service_enable") as enable,
     ):
         install_service()
 
@@ -98,6 +102,39 @@ def test_install_service_uses_patroni_profile_execstart(
         Substrates.VM, SERVICE_FILE, expected_content, 0o644, change_owner=False
     )
     _daemon_reload.assert_called_once_with()
+    protect.assert_called_once_with("charmed-postgresql")
+    restart.assert_not_called()
+    enable.assert_not_called()
+    # Every instance uses the same protected template while retaining its own config.
+    for instance in ("rel42", "rel77"):
+        instance_content = expected_content.replace("%i", instance)
+        assert f"OOMScoreAdjust={adjustment}\n" in instance_content
+        assert f"/watcher-raft/{instance}/patroni-raft.yaml" in instance_content
+
+
+def test_install_service_protection_failure_does_not_render_or_reload():
+    with (
+        patch("raft_controller.ensure_snap_oom_protection", side_effect=snap.SnapError("failed")),
+        patch("raft_controller.render_file") as render,
+        patch("raft_controller.daemon_reload") as reload,
+        raises(snap.SnapError),
+    ):
+        install_service()
+    render.assert_not_called()
+    reload.assert_not_called()
+
+
+def test_install_service_recalculates_rank():
+    with (
+        patch("raft_controller.ensure_snap_oom_protection", side_effect=[-898, -897]) as protect,
+        patch("raft_controller.render_file") as render,
+        patch("raft_controller.daemon_reload"),
+    ):
+        install_service()
+        install_service()
+    assert protect.call_count == 2
+    assert "OOMScoreAdjust=-898\n" in render.call_args_list[0].args[2]
+    assert "OOMScoreAdjust=-897\n" in render.call_args_list[1].args[2]
 
 
 def test_check_watcher_connection(controller: RaftController):
