@@ -15,7 +15,6 @@ Multi-cluster support:
 - Each RaftController uses instance-specific data directories and systemd services
 """
 
-import errno
 import json
 import logging
 import os
@@ -120,19 +119,28 @@ class WatcherRequirerHandler(Object):
             return False
         return "disable-watcher" in relation.data[relation.app]
 
-    def port_in_use(self, port: int) -> bool:
-        """Return True if the port is already taken on this machine."""
+    def _port_probe(self, port: int) -> bool:
+        """Return True if the port is already taken on this unit IP."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             try:
-                # Availability probe only: the socket never listens and is closed
-                # immediately, so nothing is exposed. The Raft controller itself
-                # binds to the unit address, not to all interfaces.
-                sock.bind(("", port))
-            except OSError as e:
-                if e.errno in (errno.EADDRINUSE, errno.EACCES):
-                    return True
-                raise
-        return False
+                return sock.connect_ex((self.unit_ip, port)) == 0
+            except OSError:
+                return False
+
+    def _get_valid_port(self, allocations: dict[str, int]) -> int:
+        """Return the first port from RAFT_PORT that is neither allocated nor in use.
+
+        Args:
+            allocations: Current port allocations, mapping relation_id (as string) to port.
+
+        Returns:
+            The first free port number.
+        """
+        used_ports = set(allocations.values())
+        port = RAFT_PORT
+        while port in used_ports or self._port_probe(port):
+            port += 1
+        return port
 
     def _get_port_for_relation(self, relation_id: int) -> int:
         """Get or assign a port for a given relation ID.
@@ -150,11 +158,7 @@ class WatcherRequirerHandler(Object):
             return allocations[key]
 
         # Assign next available port starting from RAFT_PORT
-        used_ports = set(allocations.values())
-        port = RAFT_PORT
-        while port in used_ports or self.port_in_use(port):
-            port += 1
-
+        port = self._get_valid_port(allocations)
         allocations[key] = port
         self._save_port_allocations(allocations)
         logger.info(f"Assigned port {port} to relation {relation_id}")
