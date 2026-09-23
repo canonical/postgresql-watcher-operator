@@ -18,6 +18,7 @@ Multi-cluster support:
 import json
 import logging
 import os
+import socket
 import typing
 from datetime import datetime
 
@@ -118,6 +119,36 @@ class WatcherRequirerHandler(Object):
             return False
         return "disable-watcher" in relation.data[relation.app]
 
+    def _get_valid_port(self, allocations: dict[str, int]) -> int:
+        """Return the first port from RAFT_PORT that is neither allocated nor in use.
+
+        Args:
+            allocations: Current port allocations, mapping relation_id (as string) to port.
+
+        Returns:
+            The first free port number.
+        """
+        for port in range(RAFT_PORT, 65536):
+            if port in set(allocations.values()):
+                continue
+
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                try:
+                    used_port = sock.connect_ex((self.unit_ip, port)) == 0
+                except socket.gaierror as e:
+                    logger.error(f"Cannot resolve unit address {self.unit_ip}: {e}")
+                    raise
+                except PermissionError as e:
+                    logger.warning(f"Permission denied probing port {port}: {e}")
+                    used_port = True
+                except OSError as e:
+                    logger.exception(f"Unexpected error probing port {port}: {e}")
+                    used_port = True
+
+            if not used_port:
+                break
+        return port
+
     def _get_port_for_relation(self, relation_id: int) -> int:
         """Get or assign a port for a given relation ID.
 
@@ -134,11 +165,7 @@ class WatcherRequirerHandler(Object):
             return allocations[key]
 
         # Assign next available port starting from RAFT_PORT
-        used_ports = set(allocations.values())
-        port = RAFT_PORT
-        while port in used_ports:
-            port += 1
-
+        port = self._get_valid_port(allocations)
         allocations[key] = port
         self._save_port_allocations(allocations)
         logger.info(f"Assigned port {port} to relation {relation_id}")
