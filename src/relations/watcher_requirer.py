@@ -119,14 +119,6 @@ class WatcherRequirerHandler(Object):
             return False
         return "disable-watcher" in relation.data[relation.app]
 
-    def _port_probe(self, port: int) -> bool:
-        """Return True if the port is already taken on this unit IP."""
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            try:
-                return sock.connect_ex((self.unit_ip, port)) == 0
-            except OSError:
-                return False
-
     def _get_valid_port(self, allocations: dict[str, int]) -> int:
         """Return the first port from RAFT_PORT that is neither allocated nor in use.
 
@@ -136,10 +128,25 @@ class WatcherRequirerHandler(Object):
         Returns:
             The first free port number.
         """
-        used_ports = set(allocations.values())
-        port = RAFT_PORT
-        while port in used_ports or self._port_probe(port):
-            port += 1
+        for port in range(RAFT_PORT, 65536):
+            if port in set(allocations.values()):
+                continue
+
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                try:
+                    used_port = sock.connect_ex((self.unit_ip, port)) == 0
+                except socket.gaierror as e:
+                    logger.error(f"Cannot resolve unit address {self.unit_ip}: {e}")
+                    raise
+                except PermissionError as e:
+                    logger.warning(f"Permission denied probing port {port}: {e}")
+                    used_port = True
+                except OSError as e:
+                    logger.exception(f"Unexpected error probing port {port}: {e}")
+                    used_port = True
+
+            if not used_port:
+                break
         return port
 
     def _get_port_for_relation(self, relation_id: int) -> int:
