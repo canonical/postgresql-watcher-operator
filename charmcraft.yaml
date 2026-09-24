@@ -111,3 +111,8 @@ parts:
       - lib/
     organize:
       "*-linux-gnu/libpq.so*": lib/
+  icon:
+    plugin: dump
+    source: .
+    stage:
+      - icon.svg
