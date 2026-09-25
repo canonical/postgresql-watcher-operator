@@ -98,6 +98,7 @@ parts:
 
       craftctl default
     stage:
+      - icon.svg
       - LICENSE
       - refresh_versions.toml
       - templates
@@ -111,8 +112,3 @@ parts:
       - lib/
     organize:
       "*-linux-gnu/libpq.so*": lib/
-  icon:
-    plugin: dump
-    source: .
-    stage:
-      - icon.svg
