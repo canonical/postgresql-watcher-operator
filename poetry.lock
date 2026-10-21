@@ -2011,14 +2011,14 @@ testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
 name = "postgresql-charms-single-kernel"
-version = "16.3.19"
+version = "16.3.20"
 description = "Shared and reusable code for PostgreSQL-related charms"
 optional = false
 python-versions = "<4.0,>=3.8"
 groups = ["main", "integration"]
 files = [
-    {file = "postgresql_charms_single_kernel-16.3.19-py3-none-any.whl", hash = "sha256:b135baab5b8b827e83d0feecebb9d34e909ab4382adde88623eeeaf39ced53fa"},
-    {file = "postgresql_charms_single_kernel-16.3.19.tar.gz", hash = "sha256:dc1fe229488bda6650a29422b7a87a1db3a55131b1cf21ddaad6ad6d9087d83f"},
+    {file = "postgresql_charms_single_kernel-16.3.20-py3-none-any.whl", hash = "sha256:68390002d316b052e23ae368450da457f39208fe7f6d9fee2a2fcb559e96f328"},
+    {file = "postgresql_charms_single_kernel-16.3.20.tar.gz", hash = "sha256:d5eb56983e0fa371c695ac4cc0d47406676d2dd669be6b34508fcce87350584b"},
 ]
 
 [package.dependencies]
@@ -2028,9 +2028,9 @@ tenacity = ">=9.0.0"
 
 [package.extras]
 db-driver = ["psycopg2 (>=2.9.10)"]
-k8s = ["lightkube (>=0.21.0) ; python_full_version >= \"3.12.0\"", "lightkube-models (>=1.28.1.4) ; python_full_version >= \"3.12.0\""]
-postgresql = ["boto3 (>=1.43.85) ; python_full_version >= \"3.12.0\"", "botocore (>=1.43.85) ; python_full_version >= \"3.12.0\"", "charm-refresh ; python_full_version >= \"3.12.0\"", "charmlibs-interfaces-tls-certificates (>=1.8.3) ; python_full_version >= \"3.12.0\"", "charmlibs-pathops (>=1.0.1) ; python_full_version >= \"3.12.0\"", "charmlibs-rollingops (>=1.1.1) ; python_full_version >= \"3.12.0\"", "data-platform-helpers (>=0.1.7) ; python_full_version >= \"3.12.0\"", "httpx ; python_full_version >= \"3.12.0\"", "jinja2 (>=3.1.6) ; python_full_version >= \"3.12.0\"", "pydantic (>=2.0) ; python_full_version >= \"3.12.0\"", "requests ; python_full_version >= \"3.12.0\"", "tomli ; python_full_version >= \"3.12.0\""]
-vm = ["charmlibs-snap (>=1.0.1,<2) ; python_full_version >= \"3.12.0\"", "charmlibs-systemd (>=1.0.0.post0) ; python_full_version >= \"3.12.0\"", "psutil (>=7.2.2) ; python_full_version >= \"3.12.0\"", "pysyncobj (>=0.3.15) ; python_full_version >= \"3.12.0\""]
+k8s = ["cosl (>=0.0.53) ; python_full_version >= \"3.12.0\"", "lightkube (>=0.21.0) ; python_full_version >= \"3.12.0\"", "lightkube-models (>=1.28.1.4) ; python_full_version >= \"3.12.0\""]
+postgresql = ["boto3 (>=1.43.85) ; python_full_version >= \"3.12.0\"", "botocore (>=1.43.85) ; python_full_version >= \"3.12.0\"", "charm-refresh ; python_full_version >= \"3.12.0\"", "charmlibs-interfaces-tls-certificates (>=1.8.3) ; python_full_version >= \"3.12.0\"", "charmlibs-pathops (>=1.0.1) ; python_full_version >= \"3.12.0\"", "data-platform-helpers (>=0.1.7) ; python_full_version >= \"3.12.0\"", "httpx ; python_full_version >= \"3.12.0\"", "jinja2 (>=3.1.6) ; python_full_version >= \"3.12.0\"", "jsonschema (>=4.0.0) ; python_full_version >= \"3.12.0\"", "ops[tracing] (>=2.0.0) ; python_full_version >= \"3.12.0\"", "pydantic (>=2.0) ; python_full_version >= \"3.12.0\"", "requests ; python_full_version >= \"3.12.0\"", "tomli ; python_full_version >= \"3.12.0\""]
+vm = ["charmlibs-snap (>=1.0.1,<2) ; python_full_version >= \"3.12.0\"", "charmlibs-systemd (>=1.0.0.post0) ; python_full_version >= \"3.12.0\"", "cosl (>=0.0.53) ; python_full_version >= \"3.12.0\"", "psutil (>=7.2.2) ; python_full_version >= \"3.12.0\"", "pysyncobj (>=0.3.15) ; python_full_version >= \"3.12.0\""]
 
 [[package]]
 name = "prompt-toolkit"
@@ -3470,4 +3470,4 @@ h11 = ">=0.16.0,<1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "557149d8a67831fef573bac7f4d32abe01b1fd68d8c012522b90a0a34d54f1ec"
+content-hash = "844fc0c304d6ebfbcb0ec72b2150fd0855b1a8813d6e8c72165e031187ff7281"
