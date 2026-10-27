@@ -37,20 +37,20 @@ tomli = "^2.4.1"
 optional = true
 
 [tool.poetry.group.format.dependencies]
-ruff = "^0.17.0"
+ruff = "^0.17.2"
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
 codespell = "^2.4.3"
-ty = "^0.0.86"
+ty = "^0.0.91"
 
 [tool.poetry.group.unit]
 optional = true
 
 [tool.poetry.group.unit.dependencies]
-coverage = { extras = ["toml"], version = "^7.16.2" }
+coverage = { extras = ["toml"], version = "^7.17.0" }
 pytest = "^9.1.1"
 pytest-asyncio = "*"
 parameterized = "^0.9.0"
@@ -74,7 +74,7 @@ tenacity = "*"
 psycopg2-binary = "^2.9.13"
 allure-pytest = "^2.16.2"
 allure-pytest-default-results = "^0.1.4"
-tomli = "^2.4.1"
+tomli = "^2.5.0"
 tomli-w = "^1.2.0"
 pysyncobj = "*"
 postgresql-charms-single-kernel = "*"
