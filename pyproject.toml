@@ -37,21 +37,21 @@ tomli = "^2.4.1"
 optional = true
 
 [tool.poetry.group.format.dependencies]
-ruff = "^0.17.0"
+ruff = "^0.17.3"
 
 [tool.poetry.group.lint]
 optional = true
 
 [tool.poetry.group.lint.dependencies]
 codespell = "^2.4.3"
-ty = "^0.0.86"
+ty = "^0.0.95"
 
 [tool.poetry.group.unit]
 optional = true
 
 [tool.poetry.group.unit.dependencies]
-coverage = { extras = ["toml"], version = "^7.16.2" }
-pytest = "^9.1.1"
+coverage = { extras = ["toml"], version = "^7.17.0" }
+pytest = "^9.2.0"
 pytest-asyncio = "*"
 parameterized = "^0.9.0"
 jsonschema = "^4.26.0"
@@ -65,7 +65,7 @@ optional = true
 # group (see tox.ini); the tests only import its pure-stdlib config.literals.
 # psycopg2-binary provides the psycopg2 module the tests import without building
 # the source psycopg2 the lib's postgresql extra would pull in.
-pytest = "^9.1.1"
+pytest = "^9.2.0"
 pytest-operator = "^0.43.2"
 # renovate caret doesn't work: https://github.com/renovatebot/renovate/issues/26940
 juju = "<=3.6.1.3"
@@ -74,7 +74,7 @@ tenacity = "*"
 psycopg2-binary = "^2.9.13"
 allure-pytest = "^2.16.2"
 allure-pytest-default-results = "^0.1.4"
-tomli = "^2.4.1"
+tomli = "^2.5.0"
 tomli-w = "^1.2.0"
 pysyncobj = "*"
 postgresql-charms-single-kernel = "*"
