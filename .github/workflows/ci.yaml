@@ -84,10 +84,11 @@ jobs:
       - unit-test
       - build
     # Integration tests are hosted in the single kernel library (tests/spread/pgwatcher/)
-    uses: canonical/postgresql-single-kernel-library/.github/workflows/integration_test.yaml@16/edge
+    uses: canonical/postgresql-single-kernel-library/.github/workflows/integration_test.yaml@dpe-11496
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       suite: pgwatcher
+      tests-ref: dpe-11496
     permissions:
       contents: write  # Needed for Allure Report
     cache-mode: none
