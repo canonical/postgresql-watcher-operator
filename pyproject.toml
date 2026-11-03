@@ -57,28 +57,6 @@ parameterized = "^0.9.0"
 jsonschema = "^4.26.0"
 tomli-w = "^1.2.0"
 
-[tool.poetry.group.integration]
-optional = true
-
-[tool.poetry.group.integration.dependencies]
-# single-kernel itself (bare, no extra) is installed via the shared single-kernel
-# group (see tox.ini); the tests only import its pure-stdlib config.literals.
-# psycopg2-binary provides the psycopg2 module the tests import without building
-# the source psycopg2 the lib's postgresql extra would pull in.
-pytest = "^9.1.1"
-pytest-operator = "^0.43.2"
-# renovate caret doesn't work: https://github.com/renovatebot/renovate/issues/26940
-juju = "<=3.6.1.3"
-jubilant = "^1.14.0"
-tenacity = "*"
-psycopg2-binary = "^2.9.13"
-allure-pytest = "^2.16.2"
-allure-pytest-default-results = "^0.1.4"
-tomli = "^2.4.1"
-tomli-w = "^1.2.0"
-pysyncobj = "*"
-postgresql-charms-single-kernel = "*"
-
 [tool.poetry.group.build-refresh-version]
 optional = true
 
