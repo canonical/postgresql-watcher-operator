@@ -18,7 +18,7 @@ pysyncobj = "^0.3.17"
 charm-refresh = "^3.1.0.2"
 charmlibs-snap = "^1.0.1"
 charmlibs-systemd = "^1.0.0"
-postgresql-charms-single-kernel = "16.3.22"
+postgresql-charms-single-kernel = {url = "https://github.com/canonical/postgresql-single-kernel-library/archive/ce7be1377a983ffa1572591ee7010395bc6b7c8d.tar.gz"}
 
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_models.py
@@ -77,7 +77,7 @@ allure-pytest-default-results = "^0.1.4"
 tomli = "^2.4.1"
 tomli-w = "^1.2.0"
 pysyncobj = "*"
-postgresql-charms-single-kernel = "*"
+postgresql-charms-single-kernel = {url = "https://github.com/canonical/postgresql-single-kernel-library/archive/ce7be1377a983ffa1572591ee7010395bc6b7c8d.tar.gz"}
 
 [tool.poetry.group.build-refresh-version]
 optional = true
