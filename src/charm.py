@@ -262,18 +262,23 @@ class PostgresqlWatcherCharm(TypedCharmBase[CharmConfig]):
             except KeyError:
                 logger.error("Unavailable snap architecture %s", platform.machine())
                 raise
+        snap_name = charm_refresh.snap_name()
         try:
-            snap_cache = snap.SnapCache()
-            snap_package = snap_cache[charm_refresh.snap_name()]
-            if not snap_package.present or refresh is not None:
-                snap_package.ensure(snap.SnapState.Present, revision=revision)
+            try:
+                snap.list_one(snap_name)
+            except snap.NotInstalledError:
+                present = False
+            else:
+                present = True
+            if not present or refresh is not None:
+                snap.ensure_installed(snap_name, revision=revision)
                 if refresh is not None:
                     refresh.update_snap_revision()
-                snap_package.hold()
-        except (snap.SnapError, snap.SnapNotFoundError) as e:
+                snap.hold(snap_name)
+        except snap.Error as e:
             logger.error(
                 "An exception occurred when installing %s. Reason: %s",
-                charm_refresh.snap_name(),
+                snap_name,
                 str(e),
             )
             raise

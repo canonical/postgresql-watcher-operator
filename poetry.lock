@@ -487,18 +487,15 @@ tenacity = "*"
 
 [[package]]
 name = "charmlibs-snap"
-version = "1.0.1.post0"
+version = "2.0.0"
 description = "The charmlibs.snap package."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "charmlibs_snap-1.0.1.post0-py3-none-any.whl", hash = "sha256:655041096952c63e92c8d25a6183149f0594d4888be4be62a9635cb96897aa01"},
-    {file = "charmlibs_snap-1.0.1.post0.tar.gz", hash = "sha256:1e8da752ee405aa981665da8c4772016236baf80d2d902b02ec8c1c640fb2844"},
+    {file = "charmlibs_snap-2.0.0-py3-none-any.whl", hash = "sha256:6e479163ede22f9ab4b66adead2d4ce4cdc6eb77f36f88c50c4d3d3b075da040"},
+    {file = "charmlibs_snap-2.0.0.tar.gz", hash = "sha256:82bc863919614436bf4e8e38cedaa4d809c3d4e1eedab10b2eeb97006116cd29"},
 ]
-
-[package.dependencies]
-opentelemetry-api = "*"
 
 [[package]]
 name = "charmlibs-systemd"
@@ -1868,7 +1865,7 @@ version = "1.45.1"
 description = "OpenTelemetry Python API"
 optional = false
 python-versions = ">=3.10"
-groups = ["main", "charm-libs", "integration"]
+groups = ["main", "charm-libs"]
 files = [
     {file = "opentelemetry_api-1.45.1-py3-none-any.whl", hash = "sha256:b31553efa588ae44bc306f863c785c5333a9ecc091248c6ee68b4b6c87fdedfb"},
     {file = "opentelemetry_api-1.45.1.tar.gz", hash = "sha256:aa38ed19bcc084ba42782a73255b3582283eced7ad6dddbd6695189e69adfb75"},
@@ -1883,7 +1880,7 @@ version = "3.9.0"
 description = "The Python library behind great charms"
 optional = false
 python-versions = ">=3.10"
-groups = ["main", "charm-libs", "integration"]
+groups = ["main", "charm-libs"]
 files = [
     {file = "ops-3.9.0-py3-none-any.whl", hash = "sha256:2dc7a77edae408886ccd348be590df0e03589dfe5e3e115e238d5746850eed0c"},
     {file = "ops-3.9.0.tar.gz", hash = "sha256:f8fd7fa05359e9fc057663b1a652602f5803db0b37e1bbfe9b63971c54e4b3b3"},
@@ -2001,26 +1998,24 @@ files = [
 
 [[package]]
 name = "postgresql-charms-single-kernel"
-version = "16.3.24"
+version = "16.3.26"
 description = "Shared and reusable code for PostgreSQL-related charms"
 optional = false
 python-versions = "<4.0,>=3.8"
 groups = ["main", "integration"]
 files = [
-    {file = "postgresql_charms_single_kernel-16.3.24-py3-none-any.whl", hash = "sha256:9d96a0adfc4079b1c79e05feab2b4e0015a2a504f32fabf7a4e727b0ab70cb2d"},
-    {file = "postgresql_charms_single_kernel-16.3.24.tar.gz", hash = "sha256:36ee72d098800a4ddcfcecb723047cf7bc9ef38f45d29e778720fb5ccaec36a7"},
+    {file = "postgresql_charms_single_kernel-16.3.26-py3-none-any.whl", hash = "sha256:b5056904b83d7944d52a573865efe4d06dd570498e6b95832b41e16b9be5e5ad"},
+    {file = "postgresql_charms_single_kernel-16.3.26.tar.gz", hash = "sha256:41e0c6d8dd12d06e0adf792e2f6b8ebaa0097ec8d02c80461bdc8b8615e60718"},
 ]
 
 [package.dependencies]
-cryptography = ">=42.0.0"
-ops = ">=2.0.0"
 tenacity = ">=9.0.0"
 
 [package.extras]
 db-driver = ["psycopg2 (>=2.9.10)"]
 k8s = ["cosl (>=0.0.53) ; python_full_version >= \"3.12.0\"", "lightkube (>=0.21.0) ; python_full_version >= \"3.12.0\"", "lightkube-models (>=1.28.1.4) ; python_full_version >= \"3.12.0\""]
-postgresql = ["boto3 (>=1.43.85) ; python_full_version >= \"3.12.0\"", "botocore (>=1.43.85) ; python_full_version >= \"3.12.0\"", "charm-refresh ; python_full_version >= \"3.12.0\"", "charmlibs-interfaces-tls-certificates (>=1.8.3) ; python_full_version >= \"3.12.0\"", "charmlibs-pathops (>=1.0.1) ; python_full_version >= \"3.12.0\"", "data-platform-helpers (>=0.1.7) ; python_full_version >= \"3.12.0\"", "httpx ; python_full_version >= \"3.12.0\"", "jinja2 (>=3.1.6) ; python_full_version >= \"3.12.0\"", "jsonschema (>=4.0.0) ; python_full_version >= \"3.12.0\"", "ops[tracing] (>=2.0.0) ; python_full_version >= \"3.12.0\"", "pydantic (>=2.0) ; python_full_version >= \"3.12.0\"", "requests ; python_full_version >= \"3.12.0\"", "tomli ; python_full_version >= \"3.12.0\""]
-vm = ["charmlibs-snap (>=1.0.1,<2) ; python_full_version >= \"3.12.0\"", "charmlibs-systemd (>=1.0.0.post0) ; python_full_version >= \"3.12.0\"", "cosl (>=0.0.53) ; python_full_version >= \"3.12.0\"", "psutil (>=7.2.2) ; python_full_version >= \"3.12.0\"", "pysyncobj (>=0.3.15) ; python_full_version >= \"3.12.0\""]
+postgresql = ["boto3 (>=1.43.85) ; python_full_version >= \"3.12.0\"", "botocore (>=1.43.85) ; python_full_version >= \"3.12.0\"", "charm-refresh ; python_full_version >= \"3.12.0\"", "charmlibs-interfaces-tls-certificates (>=1.8.3) ; python_full_version >= \"3.12.0\"", "charmlibs-pathops (>=1.0.1) ; python_full_version >= \"3.12.0\"", "cryptography (>=42.0.0) ; python_full_version >= \"3.12.0\"", "data-platform-helpers (>=0.1.7) ; python_full_version >= \"3.12.0\"", "httpx ; python_full_version >= \"3.12.0\"", "jinja2 (>=3.1.6) ; python_full_version >= \"3.12.0\"", "jsonschema (>=4.0.0) ; python_full_version >= \"3.12.0\"", "ops[tracing] (>=2.0.0) ; python_full_version >= \"3.12.0\"", "pydantic (>=2.0) ; python_full_version >= \"3.12.0\"", "requests ; python_full_version >= \"3.12.0\"", "tomli ; python_full_version >= \"3.12.0\""]
+vm = ["charmlibs-snap (>=2.0.0,<3) ; python_full_version >= \"3.12.0\"", "charmlibs-systemd (>=1.0.0.post0) ; python_full_version >= \"3.12.0\"", "cosl (>=0.0.53) ; python_full_version >= \"3.12.0\"", "psutil (>=7.2.2) ; python_full_version >= \"3.12.0\"", "pysyncobj (>=0.3.15) ; python_full_version >= \"3.12.0\""]
 
 [[package]]
 name = "prompt-toolkit"
@@ -3479,4 +3474,4 @@ h11 = ">=0.16.0,<1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "40cea0a6bcc5f50946d4a4bf5bd4704dda89eb4ae8b525d0706bedd2b7626fe9"
+content-hash = "2abdd545e24d4cc8c0b1c8e4a2d83c7d93ae6b1c05a122cb5ef7ceb453ccfb6e"
